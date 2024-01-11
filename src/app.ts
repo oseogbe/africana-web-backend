@@ -1,6 +1,6 @@
 import express, { Express, Request, Response, NextFunction } from 'express'
 import cors from 'cors'
-import routes from './routes/v1/auth'
+import routes from '@/routes/v1'
 import { CustomError } from 'typings'
 
 const app: Express = express()

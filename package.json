@@ -6,8 +6,8 @@
   "scripts": {
     "clean": "rimraf ./build",
     "build": "npm run clean && tsc",
-    "start": "node src/app.js",
-    "dev": "ts-node src/app.ts",
+    "start": "node -r tsconfig-paths/register src/app.js",
+    "dev": "ts-node -r tsconfig-paths/register src/app.ts",
     "dev:watch": "nodemon src/app.ts -e ts,json --exec 'npm run dev'"
   },
   "keywords": [],
@@ -26,6 +26,7 @@
     "prisma": "^5.8.0",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   }
 }
