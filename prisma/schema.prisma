@@ -9,3 +9,23 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model customers {
+  id                String   @id @default(uuid())
+  firstName         String
+  lastName          String
+  companyName       String?
+  email             String
+  email_verified_at String?
+  password          String?
+  phone             String?
+  address1          String?
+  address2          String?
+  postalCode        String?
+  city              String?
+  country           String?
+  createdAt         DateTime
+  updatedAt         DateTime
+
+  @@unique([email, phone])
+}
