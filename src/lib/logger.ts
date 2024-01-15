@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import *  as  winston from 'winston'
+import * as  winston from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
 
-const { combine, timestamp, printf, colorize, align } = winston.format
+const { combine, timestamp, printf } = winston.format
 
 const logsDir = path.join(process.cwd(), 'storage', 'logs')
 if (!fs.existsSync(logsDir)) {
@@ -19,16 +19,10 @@ const fileRotateTransport: DailyRotateFile = new DailyRotateFile({
 export const logger = winston.createLogger({
     level: process.env.LOG_LEVEL || 'info',
     format: combine(
-        colorize({ all: true }),
         timestamp({
             format: 'YYYY-MM-DD hh:mm:ss.SSS A',
         }),
-        align(),
-        printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
+        printf((info) => `[${info.timestamp}] ${info.level}: ${info.stack}`)
     ),
-    transports: [
-        // new winston.transports.Console(),
-        // new winston.transports.File({ filename: 'combined.log' }),
-        fileRotateTransport
-    ]
+    transports: [fileRotateTransport]
 })

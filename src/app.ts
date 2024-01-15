@@ -19,6 +19,10 @@ const corsOptions = {
 }
 app.use(cors(corsOptions))
 
+app.get('/ping', (req, res) => {
+    res.send("pong")
+})
+
 app.use('/api/v1', routes)
 
 app.use((err: CustomError, req: Request, res: Response, next: NextFunction) => {
@@ -28,6 +32,13 @@ app.use((err: CustomError, req: Request, res: Response, next: NextFunction) => {
         success: false,
         statusCode,
         message
+    })
+})
+
+app.all('*', (req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "resource not found"
     })
 })
 
