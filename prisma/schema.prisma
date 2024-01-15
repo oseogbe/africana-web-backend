@@ -10,22 +10,203 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model customers {
-  id                String   @id @default(uuid())
-  firstName         String
-  lastName          String
-  companyName       String?
-  email             String
-  email_verified_at String?
-  password          String?
-  phone             String?
-  address1          String?
-  address2          String?
-  postalCode        String?
-  city              String?
-  country           String?
-  createdAt         DateTime
-  updatedAt         DateTime
+model Customer {
+  id              String     @id @default(uuid())
+  firstName       String
+  lastName        String
+  companyName     String?
+  email           String     @unique
+  emailVerifiedAt String?
+  password        String?
+  phone           String?    @unique
+  address1        String?
+  address2        String?
+  postalCode      String?
+  city            String?
+  state           String?
+  country         String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  Order           Order[]
+  Cart            Cart[]
+  Payment         Payment[]
+  Wishlist        Wishlist[]
+}
 
-  @@unique([email, phone])
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+model Currency {
+  id            Int       @id @default(autoincrement())
+  code          String
+  name          String
+  exchange_rate Decimal   @db.Decimal(6, 4)
+  isDefault     Boolean   @default(true)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  Product       Product[]
+}
+
+model Product {
+  id               String           @id @default(uuid())
+  name             String           @unique
+  description      String           @db.Text
+  categories       Category[]
+  tags             Tag[]
+  stats            Decimal
+  lowOnStockMargin Int
+  Currency         Currency         @relation(fields: [currencyId], references: [id])
+  currencyId       Int
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  ProductVariant   ProductVariant[]
+  ProductImage     ProductImage[]
+  ProductReview    ProductReview[]
+}
+
+model ProductVariant {
+  id        String      @id @default(uuid())
+  Product   Product     @relation(fields: [productId], references: [id])
+  productId String
+  sku       String      @unique
+  size      String
+  color     String
+  price     Int
+  oldPrice  Int
+  quantity  Int
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  OrderItem OrderItem[]
+  CartItem  CartItem[]
+  Wishlist  Wishlist[]
+
+  @@unique([size, color])
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  Product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  url       String
+  isDefault Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductReview {
+  id        String   @id @default(uuid())
+  Product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  comment   String?  @db.Text
+  stars     Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// consider switching to Redis
+model Cart {
+  id         String     @id @default(uuid())
+  user       String?
+  Customer   Customer?  @relation(fields: [customerId], references: [id])
+  customerId String?
+  expiresAt  DateTime
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  CartItem   CartItem[]
+  Order      Order?
+}
+
+model CartItem {
+  id               String         @id @default(uuid())
+  cartId           String
+  cart             Cart           @relation(fields: [cartId], references: [id])
+  ProductVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  productVariantId String
+  pricePerItem     Int
+  quantity         Int
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model Order {
+  id         String      @id @default(uuid())
+  name       String
+  Customer   Customer    @relation(fields: [customerId], references: [id])
+  customerId String
+  cart       Cart        @relation(fields: [cartId], references: [id])
+  cartId     String      @unique
+  subTotal   Int
+  tax        Int?
+  total      Int
+  address1   String?
+  address2   String?
+  postalCode String?
+  city       String?
+  state      String?
+  country    String?
+  notes      String?     @db.Text
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  OrderItem  OrderItem[]
+  Payment    Payment[]
+}
+
+model OrderItem {
+  id               String         @id @default(uuid())
+  Order            Order          @relation(fields: [orderId], references: [id])
+  orderId          String
+  ProductVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  productVariantId String
+  pricePerItem     Int
+  quantity         Int
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  Customer    Customer      @relation(fields: [customerId], references: [id])
+  customerId  String
+  Order       Order?        @relation(fields: [orderId], references: [id])
+  orderId     String?
+  channel     String
+  reference   String
+  amount      Int
+  meta        Json?
+  status      PaymentStatus @default(Pending)
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Wishlist {
+  id               String         @id @default(uuid())
+  Customer         Customer       @relation(fields: [customerId], references: [id])
+  customerId       String
+  ProductVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  productVariantId String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+enum PaymentStatus {
+  Pending
+  Successful
+  Failed
 }
