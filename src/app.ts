@@ -2,12 +2,14 @@ import express, { Express, Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import routes from '@/routes/v1'
 import { CustomError } from 'typings'
+import path from 'path'
 
 const app: Express = express()
 const PORT = process.env.PORT || 3000
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(express.static(path.join(__dirname, '..', 'public')))
 
 const corsOptions = {
     origin: ['*'],
