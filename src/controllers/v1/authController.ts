@@ -16,10 +16,10 @@ const customErrorMap: z.ZodErrorMap = (error, ctx) => {
             const field = path.charAt(0).toUpperCase() + path.split(/(?=[A-Z])/).join(' ').slice(1).toLowerCase()
             return {
                 message: `${field} must contain at least ${error.minimum} characters`,
-            };
+            }
         default:
             // fall back to default message!
-            return { message: ctx.defaultError };
+            return { message: ctx.defaultError }
     }
 }
 
@@ -54,7 +54,8 @@ const login = async (req: Request, res: Response) => {
                     data: { refreshToken }
                 })
 
-                res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, secure: true, sameSite: 'none' })
+                // res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, secure: true, sameSite: 'none' })
+                res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 })
                 res.json({
                     success: true,
                     message: "Login successful",
@@ -109,7 +110,8 @@ const register = async (req: Request, res: Response) => {
         })
 
         if (existingUser) {
-            return res.status(400).json({
+            // 409 - conflict
+            return res.status(409).json({
                 success: false,
                 message: 'User already exists',
             })
@@ -119,11 +121,11 @@ const register = async (req: Request, res: Response) => {
             data: { firstName, lastName, email },
         })
 
-        // client url to confirm email
-        sendConfirmationEmail(customer.email, '')
+        // client url to confirm email will make a post request to backend
+        sendConfirmationEmail(customer.email, 'https://shop.africana.co/confirm-email')
 
         res.json({
-            status: 'success',
+            success: true,
             message: 'Confirmation email sent'
         })
     } catch (error) {
@@ -152,10 +154,12 @@ const confirmEmail = async (req: Request, res: Response) => {
     try {
         const customer = await prisma.customer.findUnique({
             where: { email: req.body.email },
-            select: { email: true }
+            select: { email: true, emailVerifiedAt: true }
         })
 
         if (!customer) return res.sendStatus(404)
+
+        if (customer.emailVerifiedAt) return res.json("Email already verified")
 
         const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET
 
@@ -165,20 +169,23 @@ const confirmEmail = async (req: Request, res: Response) => {
 
         const refreshToken = jwt.sign({ "email": customer.email }, refreshTokenSecret, { expiresIn: '1d' })
 
+        const emailVerifiedAt = new Date().toISOString()
+
         const password = generateRandomPassword()
         const hashedPassword = await bcrypt.hash(password, 10)
         await prisma.customer.update({
             where: { email: customer.email },
             data: {
-                emailVerifiedAt: new Date().toISOString(),
+                emailVerifiedAt,
                 password: hashedPassword,
                 refreshToken
             }
         })
-        sendLoginDetailsEmail(customer.email, password, '')
+
+        sendLoginDetailsEmail(customer.email, password, 'https://shop.africana.co/login')
 
         res.json({
-            status: 'success',
+            success: true,
             message: 'Login details email sent'
         })
     } catch (error) {
@@ -189,6 +196,35 @@ const confirmEmail = async (req: Request, res: Response) => {
         })
     } finally {
         await prisma.$disconnect()
+    }
+}
+
+const changePassword = async (req: Request, res: Response) => {
+    try {
+        const { oldPassword, newPassword } = req.body
+
+        const customer = await prisma.customer.findUnique({ where: { email: req.user }, select: { password: true } })
+
+        const match = await bcrypt.compare(oldPassword, customer?.password ?? '')
+        if (match) {
+            await prisma.customer.update({
+                where: { email: req.user },
+                data: { password: await bcrypt.hash(newPassword, 10) }
+            })
+
+            return res.json({
+                success: true,
+                message: "Password updated"
+            })
+        }
+
+        res.json({
+            error: "Current password is incorrect"
+        })
+    } catch (error) {
+        logger.error(error)
+    } finally {
+        prisma.$disconnect()
     }
 }
 
@@ -212,7 +248,7 @@ const refreshToken = async (req: Request, res: Response) => {
         }
 
         jwt.verify(refreshToken, refreshTokenSecret, (err, decoded) => {
-            const jwtPayload = decoded as JwtPayload;
+            const jwtPayload = decoded as JwtPayload
             if (err || customer.email !== jwtPayload?.email) return res.sendStatus(403)
             const accessToken = jwt.sign({ "email": jwtPayload.email }, accessTokenSecret, { expiresIn: '30m' })
             res.json({ accessToken })
@@ -264,6 +300,7 @@ export {
     login,
     register,
     confirmEmail,
+    changePassword,
     refreshToken,
     logout
 }

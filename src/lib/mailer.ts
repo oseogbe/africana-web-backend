@@ -15,8 +15,9 @@ export const sendConfirmationEmail = async (to: string, confirmationLink: string
         to,
         subject: 'Confirm Your Email Address',
         html: `
-          <p>Thank you for registering!</p>
-          <p>Please click the following link to confirm your email address:</p>
+          <b>Thank you for choosing Africana!</b>
+          <br />
+          <p>To complete registration, please click the following link to confirm your email address:</p>
           <a href="${confirmationLink}" target="_blank">Confirm Email</a>
           <br /><br />
           <p>Africana<p>
@@ -30,13 +31,14 @@ export const sendLoginDetailsEmail = async (to: string, password: string, loginU
         to,
         subject: 'Your Login Details',
         html: `
-          <p>Thank you for choosing Africana!</p>
+          <b>Welcome to Africana!</b>
+          <br />
           <p>Your login details are as follows:</p>
           <p>Email: ${to}</p>
           <p>Password: ${password}</p>
           <p>Login URL: <a href="${loginUrl}" target="_blank">${loginUrl}</a></p>
           <p>Endeavour to reset your password in your profile area.</p>
-          <br /><br />
+          <br />
           <p>Africana<p>
         `,
     })
