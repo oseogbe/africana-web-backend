@@ -3,12 +3,14 @@ import cors from 'cors'
 import routes from '@/routes/v1'
 import { CustomError } from 'typings'
 import path from 'path'
+import cookieParser from 'cookie-parser'
 
 const app: Express = express()
 const PORT = process.env.PORT || 3000
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '..', 'public')))
 
 const corsOptions = {

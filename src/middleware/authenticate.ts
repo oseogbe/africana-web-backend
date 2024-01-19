@@ -10,7 +10,7 @@ declare global {
     }
 }
 
-const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers['authorization']
     if (!authHeader) return res.sendStatus(401)
     // Bearer token
@@ -20,7 +20,7 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
         throw new Error('Access token is not defined')
     }
     jwt.verify(token, accessTokenSecret, (err, decoded) => {
-        if (err) res.sendStatus(403)
+        if (err) return res.sendStatus(403)
         // Cast decoded to JwtPayload to resolve the 'Property 'email' does not exist' error
         const jwtPayload = decoded as JwtPayload;
         req.user = jwtPayload?.email
@@ -28,11 +28,9 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
     })
 }
 
-const refreshToken = async () => {
-
-}
-
-export {
-    authenticateToken,
-    refreshToken
-}
+// export const authenticateAdmin = (req: Request, res: Response, next: NextFunction) => {
+//     if(req.user.role === 'admin') {
+//         next()
+//     }
+//     res.sendStatus(403)
+// }
