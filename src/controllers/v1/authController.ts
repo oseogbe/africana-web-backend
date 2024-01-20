@@ -1,7 +1,6 @@
 import { Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client'
 import jwt, { JwtPayload } from 'jsonwebtoken'
-import { z } from 'zod'
 import bcrypt from 'bcrypt'
 import { generateRandomPassword } from '@/lib/helpers'
 import { logger } from '@/lib/logger'
@@ -9,30 +8,9 @@ import { sendConfirmationEmail, sendLoginDetailsEmail } from '@/lib/mailer'
 
 const prisma = new PrismaClient()
 
-const customErrorMap: z.ZodErrorMap = (error, ctx) => {
-    switch (error.code) {
-        case z.ZodIssueCode.too_small:
-            const path = error.path[0].toString()
-            const field = path.charAt(0).toUpperCase() + path.split(/(?=[A-Z])/).join(' ').slice(1).toLowerCase()
-            return {
-                message: `${field} must contain at least ${error.minimum} characters`,
-            }
-        default:
-            // fall back to default message!
-            return { message: ctx.defaultError }
-    }
-}
-
 const login = async (req: Request, res: Response) => {
-    const validator = z.object({
-        email: z.string().email(),
-        password: z.string().refine(data => data.trim() !== '', {
-            message: 'Password is required',
-        }),
-    })
-
     try {
-        const { email, password } = validator.required().parse({ ...req.body })
+        const { email, password } = req.body
 
         const customer = await prisma.customer.findUnique({ where: { email } })
 
@@ -46,7 +24,7 @@ const login = async (req: Request, res: Response) => {
                     throw new Error('Access token or Refresh token secret is not defined')
                 }
 
-                const accessToken = jwt.sign({ "email": customer.email }, accessTokenSecret, { expiresIn: '5m' })
+                const accessToken = jwt.sign({ "email": customer.email }, accessTokenSecret, { expiresIn: '30m' })
                 const refreshToken = jwt.sign({ "email": customer.email }, refreshTokenSecret, { expiresIn: '1d' })
 
                 await prisma.customer.update({
@@ -54,8 +32,8 @@ const login = async (req: Request, res: Response) => {
                     data: { refreshToken }
                 })
 
-                // res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, secure: true, sameSite: 'none' })
-                res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 })
+                res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, secure: true, sameSite: 'none' })
+                // res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 })
                 res.json({
                     success: true,
                     message: "Login successful",
@@ -74,36 +52,19 @@ const login = async (req: Request, res: Response) => {
             })
         }
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({
-                success: false,
-                message: 'Validation error',
-                errors: error.errors.map(error => ({
-                    message: error.message,
-                    path: error.path
-                })),
-            })
-        } else {
-            logger.error(error)
-            res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-            })
-        }
+        logger.error(error)
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+        })
     } finally {
         await prisma.$disconnect()
     }
 }
 
 const register = async (req: Request, res: Response) => {
-    const validator = z.object({
-        firstName: z.string().min(2),
-        lastName: z.string().min(2),
-        email: z.string().email(),
-    })
-
     try {
-        const { firstName, lastName, email } = validator.parse({ ...req.body }, { errorMap: customErrorMap })
+        const { firstName, lastName, email } = req.body
 
         const existingUser = await prisma.customer.findUnique({
             where: { email },
@@ -129,22 +90,11 @@ const register = async (req: Request, res: Response) => {
             message: 'Confirmation email sent'
         })
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({
-                success: false,
-                message: 'Validation error',
-                errors: error.errors.map(error => ({
-                    message: error.message,
-                    path: error.path
-                })),
-            })
-        } else {
-            logger.error(error)
-            res.status(500).json({
-                success: false,
-                message: 'Error sending confirmation email',
-            })
-        }
+        logger.error(error)
+        res.status(500).json({
+            success: false,
+            message: 'Error sending confirmation email',
+        })
     } finally {
         await prisma.$disconnect()
     }

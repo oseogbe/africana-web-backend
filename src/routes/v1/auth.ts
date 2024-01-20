@@ -14,9 +14,26 @@ const validateInput = (req: Request, res: Response, next: NextFunction) => {
     next()
 }
 
-router.post('/login', login)
+router.post(
+    '/login',
+    [
+        body('email').isString().trim().isEmail().withMessage('Email is required'),
+        body('password').isString().notEmpty().withMessage('Password is required'),
+    ],
+    validateInput,
+    login
+)
 
-router.post('/register', register)
+router.post(
+    '/register',
+    [
+        body('firstName').isString().trim().isLength({ min: 2 }).withMessage('First name is required'),
+        body('lastName').isString().trim().isLength({ min: 2 }).withMessage('Last name is required'),
+        body('email').isString().trim().isEmail().withMessage('Email is required'),
+    ],
+    validateInput,
+    register
+)
 
 router.post('/confirm-email', confirmEmail)
 
@@ -24,8 +41,8 @@ router.post(
     '/change-password',
     authenticateToken,
     [
-        body('oldPassword').isString().notEmpty().withMessage('Old password is required'),
-        body('newPassword').isString().notEmpty().withMessage('New password is required'),
+        body('oldPassword').isString().trim().notEmpty().withMessage('Old password is required'),
+        body('newPassword').isString().trim().notEmpty().withMessage('New password is required'),
         body('confirmNewPassword')
             .custom((value, { req }) => {
                 if (value !== req.body.newPassword) {
@@ -33,7 +50,7 @@ router.post(
                 }
                 return true;
             })
-            .isString().notEmpty().withMessage('Confirm new password is required'),
+            .isString().trim().notEmpty().withMessage('Confirm new password is required'),
     ],
     validateInput,
     changePassword
