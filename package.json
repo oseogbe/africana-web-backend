@@ -15,7 +15,8 @@
     "prisma:generate": "prisma generate",
     "prisma:generate:watch": "prisma generate --watch",
     "prisma:seed": "prisma db seed --preview-feature",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "seed": "ts-node src/seeders/database.seeder.ts"
   },
   "keywords": [],
   "author": "Osememen Ogbe",
