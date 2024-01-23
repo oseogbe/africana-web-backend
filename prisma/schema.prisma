@@ -69,8 +69,8 @@ model Currency {
 
 model Product {
   id               String           @id @default(uuid())
-  name             String           @unique
-  slug             String
+  name             String
+  slug             String           @unique
   description      String           @db.Text
   categories       Category[]
   tags             Tag[]
@@ -87,7 +87,7 @@ model Product {
 
 model ProductVariant {
   id        String      @id @default(uuid())
-  product   Product     @relation(fields: [productId], references: [id])
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   sku       String      @unique
   size      String
@@ -106,9 +106,9 @@ model ProductVariant {
 
 model ProductImage {
   id        String   @id @default(uuid())
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
-  url       String
+  url       String   @unique
   isDefault Boolean
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -116,7 +116,7 @@ model ProductImage {
 
 model ProductReview {
   id        String   @id @default(uuid())
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   comment   String?  @db.Text
   stars     Int?
