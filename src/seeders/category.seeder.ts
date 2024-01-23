@@ -1,9 +1,10 @@
+import { slugify } from "@/lib/helpers";
 import { PrismaClient } from "@prisma/client"
 
 export async function seedCategories(prisma: PrismaClient, categoriesData: { name: string; children?: any[] }[], parentId?: number, parentSlug?: string) {
     for (const categoryData of categoriesData) {
         const { name, children } = categoryData
-        const slug = name.toLowerCase().replace(/\s+/g, '-')
+        const slug = slugify(name)
 
         const category = await prisma.category.create({
             data: {

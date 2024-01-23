@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { seedCategories } from "./category.seeder"
+import { seedCurrencies } from "./currency.seeder"
 
 const prisma = new PrismaClient()
 
@@ -80,10 +81,22 @@ const categoriesData = [
     }
 ]
 
+const currenciesData = [
+    {
+        code: 'NGN',
+        name: 'Naira',
+        exchangeRate: 1.00,
+        isDefault: true,
+        isActive: true
+    }
+]
+
 async function runSeeders() {
     // Seed categories
-    await prisma.category.deleteMany({})
-    await seedCategories(prisma, categoriesData);
+    // await prisma.category.deleteMany({})
+    // await seedCategories(prisma, categoriesData)
+
+    await seedCurrencies(prisma, currenciesData)
 }
 
 runSeeders()
@@ -91,6 +104,6 @@ runSeeders()
         console.log(error)
     })
     .finally(async () => {
-        prisma.$disconnect()
+        await prisma.$disconnect()
         process.exit()
     })

@@ -174,7 +174,7 @@ const changePassword = async (req: Request, res: Response) => {
     } catch (error) {
         logger.error(error)
     } finally {
-        prisma.$disconnect()
+        await prisma.$disconnect()
     }
 }
 

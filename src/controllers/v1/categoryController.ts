@@ -20,7 +20,7 @@ const getCategories = async (req: Request, res: Response) => {
     }
 }
 
-const organizeCategories = (categories: any[]) => {
+function organizeCategories(categories: any[]) {
     const categoryMap = new Map<number, any>()
 
     categories.forEach((category) => {

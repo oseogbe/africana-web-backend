@@ -1,18 +1,10 @@
-import express, { NextFunction, Request, Response } from 'express'
+import express from 'express'
 import { login, register, logout, refreshToken, confirmEmail, changePassword } from '@/controllers/v1/authController'
 import { authenticateToken } from '@/middleware/authenticate'
-import { body, validationResult } from 'express-validator'
+import { body } from 'express-validator'
+import { validateInput } from '@/middleware/validate'
 
 const router = express.Router()
-
-// Middleware for handling validation errors
-const validateInput = (req: Request, res: Response, next: NextFunction) => {
-    const errors = validationResult(req)
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() })
-    }
-    next()
-}
 
 router.post(
     '/login',

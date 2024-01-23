@@ -56,20 +56,21 @@ model Tag {
 }
 
 model Currency {
-  id            Int       @id @default(autoincrement())
-  code          String
-  name          String
-  exchange_rate Decimal   @db.Decimal(6, 4)
-  isDefault     Boolean   @default(false)
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  product       Product[]
+  id           Int       @id @default(autoincrement())
+  code         String
+  name         String
+  exchangeRate Decimal   @db.Decimal(6, 4)
+  isDefault    Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  product      Product[]
 }
 
 model Product {
   id               String           @id @default(uuid())
   name             String           @unique
+  slug             String
   description      String           @db.Text
   categories       Category[]
   tags             Tag[]
@@ -79,9 +80,9 @@ model Product {
   currencyId       Int
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
-  productVariant   ProductVariant[]
-  productImage     ProductImage[]
-  productReview    ProductReview[]
+  productVariants  ProductVariant[]
+  productImages    ProductImage[]
+  productReviews   ProductReview[]
 }
 
 model ProductVariant {
@@ -90,9 +91,9 @@ model ProductVariant {
   productId String
   sku       String      @unique
   size      String
-  color     String
+  color     String?
   price     Int
-  oldPrice  Int
+  oldPrice  Int?
   quantity  Int
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
