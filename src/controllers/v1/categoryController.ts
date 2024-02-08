@@ -1,8 +1,6 @@
+import { prisma } from '@/prisma-client'
 import { logger } from '@/lib/logger'
-import { PrismaClient } from '@prisma/client'
 import { Request, Response } from 'express'
-
-const prisma = new PrismaClient()
 
 const getCategories = async (req: Request, res: Response) => {
     try {

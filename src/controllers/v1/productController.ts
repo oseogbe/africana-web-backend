@@ -1,9 +1,8 @@
+import { Request, Response } from 'express'
+import { Prisma } from '@prisma/client'
+import { prisma } from '@/prisma-client'
 import { getAmount, setAmount, slugify } from '@/lib/helpers'
 import { logger } from '@/lib/logger'
-import { PrismaClient, Prisma } from '@prisma/client'
-import { Request, Response } from 'express'
-
-const prisma = new PrismaClient()
 
 const getProducts = async (req: Request, res: Response) => {
     try {
@@ -29,10 +28,7 @@ const getProducts = async (req: Request, res: Response) => {
         })
     } catch (error) {
         logger.error(error)
-    } finally {
-        await prisma.$disconnect()
     }
-
 }
 
 const createProduct = async (req: Request, res: Response) => {
@@ -93,8 +89,6 @@ const createProduct = async (req: Request, res: Response) => {
         })
     } catch (error) {
         logger.error(error)
-    } finally {
-        await prisma.$disconnect()
     }
 }
 
@@ -124,8 +118,6 @@ const getProduct = async (req: Request, res: Response) => {
         })
     } catch (error) {
         logger.error(error)
-    } finally {
-        await prisma.$disconnect()
     }
 }
 
@@ -212,8 +204,6 @@ const updateProduct = async (req: Request, res: Response) => {
         })
     } catch (error) {
         logger.error(error)
-    } finally {
-        await prisma.$disconnect()
     }
 }
 
@@ -231,8 +221,6 @@ const deleteProduct = async (req: Request, res: Response) => {
         })
     } catch (error) {
         logger.error(error)
-    } finally {
-        await prisma.$disconnect()
     }
 }
 

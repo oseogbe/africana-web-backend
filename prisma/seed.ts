@@ -1,8 +1,59 @@
 import { PrismaClient } from '@prisma/client'
-import { seedCategories } from "./category.seeder"
-import { seedCurrencies } from "./currency.seeder"
+import { slugify } from "../src/lib/helpers";
 
 const prisma = new PrismaClient()
+
+interface CurrencyInterface {
+    code: string;
+    name: string;
+    exchangeRate: number;
+    isDefault: boolean;
+    isActive: boolean;
+}
+
+interface CategoryInterface {
+    name: string;
+    children?: any[];
+}
+
+async function seedCurrencies(currenciesData: CurrencyInterface[]) {
+    for (const currency of currenciesData) {
+        await prisma.currency.create({
+            data: { ...currency },
+        })
+    }
+    console.log('Currencies seeded successfully')
+}
+
+async function seedCategories(categoriesData: CategoryInterface[], parentId?: number, parentSlug?: string) {
+    for (const categoryData of categoriesData) {
+        const { name, children } = categoryData
+        const slug = slugify(name)
+
+        const category = await prisma.category.create({
+            data: {
+                name,
+                parentId,
+                slug: parentSlug?.length ? parentSlug + '-' + slug : slug,
+            },
+        })
+
+        if (children && children.length > 0) {
+            await seedCategories(children, category.id, category.slug)
+        }
+    }
+    console.log('Category seeded successfully')
+}
+
+const currenciesData = [
+    {
+        code: 'NGN',
+        name: 'Naira',
+        exchangeRate: 1,
+        isDefault: true,
+        isActive: true,
+    }
+]
 
 const categoriesData = [
     {
@@ -81,29 +132,19 @@ const categoriesData = [
     }
 ]
 
-const currenciesData = [
-    {
-        code: 'NGN',
-        name: 'Naira',
-        exchangeRate: 1.00,
-        isDefault: true,
-        isActive: true
-    }
-]
-
-async function runSeeders() {
-    // Seed categories
+async function main() {
+    // await prisma.currency.deleteMany({})
+    await seedCurrencies(currenciesData)
     // await prisma.category.deleteMany({})
-    // await seedCategories(prisma, categoriesData)
-
-    await seedCurrencies(prisma, currenciesData)
+    await seedCategories(categoriesData)
 }
 
-runSeeders()
-    .catch((error) => {
-        console.log(error)
-    })
-    .finally(async () => {
+main()
+    .then(async () => {
         await prisma.$disconnect()
-        process.exit()
+    })
+    .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+        process.exit(1)
     })

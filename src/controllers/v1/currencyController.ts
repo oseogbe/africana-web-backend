@@ -1,8 +1,6 @@
 import { Request, Response } from "express"
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "@/prisma-client"
 import { logger } from "@/lib/logger"
-
-const prisma = new PrismaClient()
 
 const getCurrencies = async (req: Request, res: Response) => {
     try {
@@ -12,8 +10,6 @@ const getCurrencies = async (req: Request, res: Response) => {
         })
     } catch (error) {
         logger.error(error)
-    } finally {
-        await prisma.$disconnect()
     }
 }
 

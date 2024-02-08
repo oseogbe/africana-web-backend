@@ -1,12 +1,10 @@
 import { Request, Response } from 'express'
-import { PrismaClient } from '@prisma/client'
-import jwt, { JwtPayload } from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
+import { prisma } from '@/prisma-client'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import { generateRandomPassword } from '@/lib/helpers'
 import { logger } from '@/lib/logger'
 import { sendConfirmationEmail, sendLoginDetailsEmail } from '@/lib/mailer'
-
-const prisma = new PrismaClient()
 
 const login = async (req: Request, res: Response) => {
     try {
@@ -57,8 +55,6 @@ const login = async (req: Request, res: Response) => {
             success: false,
             message: 'Internal server error',
         })
-    } finally {
-        await prisma.$disconnect()
     }
 }
 
@@ -95,8 +91,6 @@ const register = async (req: Request, res: Response) => {
             success: false,
             message: 'Error sending confirmation email',
         })
-    } finally {
-        await prisma.$disconnect()
     }
 }
 
@@ -144,8 +138,6 @@ const confirmEmail = async (req: Request, res: Response) => {
             success: false,
             message: 'Error sending login details email',
         })
-    } finally {
-        await prisma.$disconnect()
     }
 }
 
@@ -173,8 +165,6 @@ const changePassword = async (req: Request, res: Response) => {
         })
     } catch (error) {
         logger.error(error)
-    } finally {
-        await prisma.$disconnect()
     }
 }
 
@@ -205,8 +195,6 @@ const refreshToken = async (req: Request, res: Response) => {
         })
     } catch (error) {
         logger.error(error)
-    } finally {
-        await prisma.$disconnect()
     }
 }
 
@@ -241,8 +229,6 @@ const logout = async (req: Request, res: Response) => {
         return res.sendStatus(204)
     } catch (error) {
         logger.error(error)
-    } finally {
-        await prisma.$disconnect()
     }
 }
 

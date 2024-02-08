@@ -1,13 +1,11 @@
 import express from 'express'
+import { body } from 'express-validator'
+import { prisma } from '@/prisma-client'
 import { getProducts, createProduct, getProduct, deleteProduct, updateProduct } from '@/controllers/v1/productController'
 import { authenticateToken } from '@/middleware/authenticate'
-import { body } from 'express-validator'
-import { PrismaClient } from '@prisma/client'
 import { validateInput } from '@/middleware/validate'
 
 const router = express.Router()
-
-const prisma = new PrismaClient()
 
 router.get('/', getProducts)
 
