@@ -23,9 +23,15 @@ const slugify = (word: string) => {
     return word.toLowerCase().replace(/\s+/g, '-')
 }
 
+const randomSelect = (list: string[]) => {
+    const randomIndex = Math.floor(Math.random() * list.length)
+    return list[randomIndex]
+}
+
 export {
     getAmount,
     setAmount,
     generateRandomPassword,
-    slugify
+    slugify,
+    randomSelect,
 }

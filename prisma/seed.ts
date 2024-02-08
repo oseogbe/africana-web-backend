@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
-import { slugify } from "../src/lib/helpers";
+import { randomSelect, setAmount, slugify } from '../src/lib/helpers'
+import { faker } from '@faker-js/faker'
 
 const prisma = new PrismaClient()
 
@@ -43,6 +44,88 @@ async function seedCategories(categoriesData: CategoryInterface[], parentId?: nu
         }
     }
     console.log('Category seeded successfully')
+}
+
+async function seedProducts(length: number) {
+    Array.from({ length }, async () => {
+        const productName = faker.commerce.productName()
+
+        const productVariants = Array.from({ length: 3 }, () => ({
+            sku: faker.string.alphanumeric({ length: { min: 8, max: 12 } }),
+            size: randomSelect(['S', 'M', 'L', 'XL', 'XXL', 'XXXL']),
+            price: setAmount(parseInt(faker.commerce.price({ min: 100000, max: 200000 }))),
+            oldPrice: setAmount(parseInt(faker.commerce.price({ min: 100000, max: 200000 }))),
+            quantity: faker.number.int({ min: 5, max: 10 })
+        }))
+
+        const productImages = [
+            {
+                url: `${faker.string.alphanumeric({ length: { min: 20, max: 30 } })}.jpg`,
+                isDefault: true
+            },
+            {
+                url: `${faker.string.alphanumeric({ length: { min: 20, max: 30 } })}.jpg`,
+                isDefault: false
+            },
+            {
+                url: `${faker.string.alphanumeric({ length: { min: 20, max: 30 } })}.jpg`,
+                isDefault: false
+            },
+        ]
+
+        const product = await prisma.product.create({
+            data: {
+                name: productName,
+                slug: slugify(productName),
+                description: faker.commerce.productDescription(),
+                currencyId: 1,
+                lowOnStockMargin: 2,
+                productVariants: {
+                    create: [
+                        ...productVariants.map(variant => ({
+                            ...variant,
+                            price: setAmount(variant.price),
+                            oldPrice: variant.oldPrice ? setAmount(variant.oldPrice) : null,
+                        }))
+                    ],
+                },
+                productImages: {
+                    create: [
+                        ...productImages
+                    ],
+                },
+            }
+        })
+
+        const categoryResult: number[] = await prisma.$queryRaw`SELECT id FROM Category ORDER BY RAND() LIMIT 3;`
+        const categoryIds = categoryResult.map((row: any) => row.id).sort((a, b) => a - b)
+
+        const tagResult: number[] = await prisma.$queryRaw`SELECT id FROM Tag ORDER BY RAND() LIMIT 5;`
+        const tagIds = tagResult.map((row: any) => row.id).sort((a, b) => a - b)
+
+        const productCategoriesAndTags = await prisma.product.update({
+            where: { id: product.id },
+            data: {
+                categories: {
+                    connect: [
+                        ...categoryIds.map(category => ({
+                            id: category,
+                        }))
+                    ],
+                },
+                tags: {
+                    connect: [
+                        ...tagIds.map(tag => ({
+                            id: tag,
+                        }))
+                    ],
+                }
+            }
+        })
+
+    })
+
+    console.log('Test products seeded successfully')
 }
 
 const currenciesData = [
@@ -134,9 +217,10 @@ const categoriesData = [
 
 async function main() {
     // await prisma.currency.deleteMany({})
-    await seedCurrencies(currenciesData)
+    // await seedCurrencies(currenciesData)
     // await prisma.category.deleteMany({})
-    await seedCategories(categoriesData)
+    // await seedCategories(categoriesData)
+    // await seedProducts(20)
 }
 
 main()
