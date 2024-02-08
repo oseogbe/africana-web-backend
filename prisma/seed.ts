@@ -53,8 +53,8 @@ async function seedProducts(length: number) {
         const productVariants = Array.from({ length: 3 }, () => ({
             sku: faker.string.alphanumeric({ length: { min: 8, max: 12 } }),
             size: randomSelect(['S', 'M', 'L', 'XL', 'XXL', 'XXXL']),
-            price: setAmount(parseInt(faker.commerce.price({ min: 100000, max: 200000 }))),
-            oldPrice: setAmount(parseInt(faker.commerce.price({ min: 100000, max: 200000 }))),
+            price: parseInt(faker.commerce.price({ min: 100000, max: 200000 })),
+            oldPrice: parseInt(faker.commerce.price({ min: 100000, max: 200000 })),
             quantity: faker.number.int({ min: 5, max: 10 })
         }))
 
@@ -220,7 +220,8 @@ async function main() {
     // await seedCurrencies(currenciesData)
     // await prisma.category.deleteMany({})
     // await seedCategories(categoriesData)
-    // await seedProducts(20)
+    await prisma.product.deleteMany({})
+    await seedProducts(20)
 }
 
 main()
