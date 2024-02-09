@@ -6,12 +6,15 @@ import { logger } from '@/lib/logger'
 
 const getProducts = async (req: Request, res: Response) => {
     try {
+        logger.info("getting products")
         const products = await prisma.product.findMany({
             include: {
                 productVariants: true,
                 productImages: true,
             }
         })
+
+        logger.info("products with variants and images")
 
         const updatedProducts = products.map(product => {
             const updatedVariants = product.productVariants.map(variant => {
