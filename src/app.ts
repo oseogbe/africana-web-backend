@@ -1,9 +1,12 @@
 import express, { Express, Request, Response, NextFunction } from 'express'
 import cors from 'cors'
-import routes from '@/routes/v1'
-import { CustomError } from 'typings'
 import path from 'path'
 import cookieParser from 'cookie-parser'
+import 'dotenv/config'
+import routes from '@/routes/v1'
+import { CustomError } from 'typings'
+
+require('dotenv').config()
 
 const app: Express = express()
 const PORT = process.env.PORT || 3000
