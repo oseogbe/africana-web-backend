@@ -1,5 +1,5 @@
 import express from 'express'
-import { body } from 'express-validator'
+import { body, query } from 'express-validator'
 import { prisma } from '@/prisma-client'
 import { getProducts, createProduct, getProduct, deleteProduct, updateProduct } from '@/controllers/v1/productController'
 import { authenticateToken } from '@/middleware/authenticate'
@@ -7,7 +7,19 @@ import { validateInput } from '@/middleware/validate'
 
 const router = express.Router()
 
-router.get('/', getProducts)
+router.get(
+    '/',
+    [
+        query('search').optional().isString().trim(),
+        query('minPrice').optional().isNumeric(),
+        query('maxPrice').optional().isNumeric(),
+        query('categorySlug').optional().isString().trim(),
+        query('tagSlug').optional().isString().trim(),
+        query('color').optional().isString().trim(),
+        validateInput,
+    ],
+    getProducts
+)
 
 router.post(
     '/create',

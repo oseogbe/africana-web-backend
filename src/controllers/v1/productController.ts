@@ -6,15 +6,74 @@ import { logger } from '@/lib/logger'
 
 const getProducts = async (req: Request, res: Response) => {
     try {
-        logger.info("getting products")
+        const { search, minPrice, maxPrice, categorySlug, tagSlug, color } = req.query
+
+        let where = {}
+
+        if (search) {
+            where = {
+                ...where,
+                name: {
+                    contains: search
+                }
+            }
+        }
+
+        if (minPrice && maxPrice) {
+            where = {
+                ...where,
+                productVariants: {
+                    some: {
+                        price: {
+                            gte: setAmount(parseInt(minPrice as string, 10)),
+                            lte: setAmount(parseInt(maxPrice as string, 10))
+                        }
+                    }
+                }
+            }
+        }
+
+        if (categorySlug) {
+            where = {
+                ...where,
+                categories: {
+                    some: {
+                        slug: categorySlug as string
+                    }
+                }
+            }
+        }
+
+        if (tagSlug) {
+            where = {
+                ...where,
+                tags: {
+                    some: {
+                        slug: tagSlug as string
+                    }
+                }
+            }
+        }
+
+
+        if (color) {
+            where = {
+                ...where,
+                productVariants: {
+                    some: {
+                        color: color as string
+                    }
+                }
+            }
+        }
+
         const products = await prisma.product.findMany({
+            where,
             include: {
                 productVariants: true,
                 productImages: true,
             }
         })
-
-        logger.info("products with variants and images")
 
         const updatedProducts = products.map(product => {
             const updatedVariants = product.productVariants.map(variant => {
