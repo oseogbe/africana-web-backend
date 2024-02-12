@@ -3,8 +3,24 @@ import { login, register, logout, refreshToken, confirmEmail, changePassword } f
 import { authenticateToken } from '@/middleware/authenticate'
 import { body } from 'express-validator'
 import { validateInput } from '@/middleware/validate'
+import { generateRandomString } from '@/lib/helpers'
 
 const router = express.Router()
+
+router.get('/initialize', (req, res) => {
+    const sessionId = generateRandomString(16)
+    res.cookie(
+        'africana_session_id',
+        sessionId,
+        {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000,
+            secure: true,
+            sameSite: 'none'
+        }
+    )
+    res.send('Session initialized')
+})
 
 router.post(
     '/login',

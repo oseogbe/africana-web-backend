@@ -6,17 +6,16 @@ const setAmount = (amount: number) => {
     return amount * 100
 }
 
-const generateRandomPassword = (): string => {
+const generateRandomString = (length: number): string => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+'
-    const passwordLength = 8
 
-    let randomPassword = ''
-    for (let i = 0; i < passwordLength; i++) {
+    let randomString = ''
+    for (let i = 0; i < length; i++) {
         const randomIndex = Math.floor(Math.random() * characters.length)
-        randomPassword += characters.charAt(randomIndex)
+        randomString += characters.charAt(randomIndex)
     }
 
-    return randomPassword
+    return randomString
 }
 
 const slugify = (word: string) => {
@@ -31,7 +30,7 @@ const randomSelect = (list: string[]) => {
 export {
     getAmount,
     setAmount,
-    generateRandomPassword,
+    generateRandomString,
     slugify,
     randomSelect,
 }

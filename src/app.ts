@@ -11,12 +11,7 @@ require('dotenv').config()
 const app: Express = express()
 const PORT = process.env.PORT || 3000
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-app.use(cookieParser())
-app.use(express.static(path.join(__dirname, '..', 'public')))
-
-const corsOptions = {
+const corsOptions: cors.CorsOptions = {
     origin: ['*'],
     methods: ['*'],
     allowedHeaders: ['*'],
@@ -25,6 +20,10 @@ const corsOptions = {
     credentials: true,
 }
 app.use(cors(corsOptions))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
+app.use(express.static(path.join(__dirname, '..', 'public')))
 
 app.get('/ping', (req, res) => {
     res.send("pong")

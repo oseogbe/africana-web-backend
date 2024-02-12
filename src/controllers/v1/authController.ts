@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import { prisma } from '@/prisma-client'
 import jwt, { JwtPayload } from 'jsonwebtoken'
-import { generateRandomPassword } from '@/lib/helpers'
+import { generateRandomString } from '@/lib/helpers'
 import { logger } from '@/lib/logger'
 import { sendConfirmationEmail, sendLoginDetailsEmail } from '@/lib/mailer'
 
@@ -115,7 +115,7 @@ const confirmEmail = async (req: Request, res: Response) => {
 
         const emailVerifiedAt = new Date().toISOString()
 
-        const password = generateRandomPassword()
+        const password = generateRandomString(8)
         const hashedPassword = await bcrypt.hash(password, 10)
         await prisma.customer.update({
             where: { email: customer.email },
