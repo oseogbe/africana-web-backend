@@ -14,9 +14,9 @@ const PORT = process.env.PORT || 3000
 const corsOptions: cors.CorsOptions = {
     origin: [
         'http://africanalifestyle.tv',
-        'http://localhost:3000',
         'http://144.149.167.72.host.secureserver.net',
-        'https://72.167.149.144'
+        'https://72.167.149.144',
+        '102.220.97.130',
     ],
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: ['Accept', 'Content-Type', 'Origin', 'X-Requested-With'],
