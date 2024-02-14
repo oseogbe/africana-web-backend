@@ -16,7 +16,7 @@ const corsOptions: cors.CorsOptions = {
         'http://africanalifestyle.tv',
         'http://144.149.167.72.host.secureserver.net',
         'https://72.167.149.144',
-        '102.220.97.130',
+        'http://localhost:3000',
     ],
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: ['Accept', 'Content-Type', 'Origin', 'X-Requested-With'],
