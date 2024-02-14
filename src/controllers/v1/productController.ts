@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger'
 
 const getProducts = async (req: Request, res: Response) => {
     try {
-        const { search, minPrice, maxPrice, categorySlug, tagSlug, color } = req.query
+        const { search, minPrice, maxPrice, categorySlug, tagSlug, color, page } = req.query
 
         let where = {}
 
@@ -67,12 +67,17 @@ const getProducts = async (req: Request, res: Response) => {
             }
         }
 
+        const take = 16
+        const skip = page ? (parseInt(page as string, 10) * take) - take : 0
+
         const products = await prisma.product.findMany({
             where,
             include: {
                 productVariants: true,
                 productImages: true,
-            }
+            },
+            take,
+            skip,
         })
 
         const updatedProducts = products.map(product => {

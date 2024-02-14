@@ -16,6 +16,12 @@ router.get(
         query('categorySlug').optional().isString().trim(),
         query('tagSlug').optional().isString().trim(),
         query('color').optional().isString().trim(),
+        query('page').optional().isNumeric().custom((value) => {
+            if (parseInt(value, 10) < 1) {
+                throw new Error('Page must be greater than or equal to 1');
+            }
+            return true;
+        }),
         validateInput,
     ],
     getProducts
