@@ -12,9 +12,14 @@ const app: Express = express()
 const PORT = process.env.PORT || 3000
 
 const corsOptions: cors.CorsOptions = {
-    origin: ['*'],
-    methods: ['*'],
-    allowedHeaders: ['*'],
+    origin: [
+        'http://africanalifestyle.tv',
+        'http://localhost:3000',
+        'http://144.149.167.72.host.secureserver.net',
+        'https://72.167.149.144'
+    ],
+    methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
+    allowedHeaders: ['Accept', 'Content-Type', 'Origin', 'X-Requested-With'],
     exposedHeaders: [],
     maxAge: 0,
     credentials: true,
