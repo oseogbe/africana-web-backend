@@ -89,8 +89,13 @@ const getProducts = async (req: Request, res: Response) => {
             return { ...product, productVariants: updatedVariants }
         })
 
+        const totalProducts = await prisma.product.count({
+            where,
+        })
+
         return res.json({
             success: true,
+            total: totalProducts,
             products: updatedProducts
         })
     } catch (error) {
