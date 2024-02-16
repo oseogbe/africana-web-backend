@@ -22,6 +22,8 @@ router.get(
             }
             return true;
         }),
+        query('limit').optional().isNumeric(),
+        query('latest').optional().isBoolean(),
         validateInput,
     ],
     getProducts

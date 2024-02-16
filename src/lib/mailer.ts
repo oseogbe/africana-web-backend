@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendConfirmationEmail = async (to: string, confirmationLink: string): Promise<void> => {
     await transporter.sendMail({
-        from: 'noreply@shop.africana.co',
+        from: 'noreply@shopafricana.co',
         to,
         subject: 'Confirm Your Email Address',
         html: `
@@ -27,7 +27,7 @@ export const sendConfirmationEmail = async (to: string, confirmationLink: string
 
 export const sendLoginDetailsEmail = async (to: string, password: string, loginUrl: string): Promise<void> => {
     await transporter.sendMail({
-        from: 'noreply@shop.africana.co',
+        from: 'noreply@shopafricana.co',
         to,
         subject: 'Your Login Details',
         html: `

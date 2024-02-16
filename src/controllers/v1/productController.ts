@@ -6,7 +6,17 @@ import { logger } from '@/lib/logger'
 
 const getProducts = async (req: Request, res: Response) => {
     try {
-        const { search, minPrice, maxPrice, categorySlug, tagSlug, color, page } = req.query
+        const {
+            search,
+            minPrice,
+            maxPrice,
+            categorySlug,
+            tagSlug,
+            color,
+            page,
+            limit,
+            latest,
+        } = req.query
 
         let where = {}
 
@@ -67,7 +77,16 @@ const getProducts = async (req: Request, res: Response) => {
             }
         }
 
-        const take = 16
+        if (latest) {
+            where = {
+                ...where,
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            }
+        }
+
+        const take = parseInt(limit as string, 10) ?? 16
         const skip = page ? (parseInt(page as string, 10) * take) - take : 0
 
         const products = await prisma.product.findMany({
