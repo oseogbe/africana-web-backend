@@ -17,6 +17,7 @@ const corsOptions: cors.CorsOptions = {
         'http://144.149.167.72.host.secureserver.net',
         'https://72.167.149.144',
         'http://localhost:3000',
+        'http://*.*.*.*',
     ],
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: ['Accept', 'Content-Type', 'Origin', 'X-Requested-With'],
