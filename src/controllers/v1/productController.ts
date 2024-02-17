@@ -86,7 +86,7 @@ const getProducts = async (req: Request, res: Response) => {
             }
         }
 
-        const take = parseInt(limit as string, 10) ?? 16
+        const take = parseInt(limit as string, 10) || 16
         const skip = page ? (parseInt(page as string, 10) * take) - take : 0
 
         const products = await prisma.product.findMany({
