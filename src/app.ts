@@ -16,7 +16,8 @@ const corsOptions: cors.CorsOptions = {
         'http://africanalifestyle.tv',
         'http://144.149.167.72.host.secureserver.net',
         'https://72.167.149.144',
-        'http://127.0.0.1',
+        '102.220.97.130',
+        '127.0.0.1',
     ],
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: ['Accept', 'Content-Type', 'Origin', 'X-Requested-With'],
@@ -53,4 +54,5 @@ app.all('*', (req, res) => {
     })
 })
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}...`))
+const ipAddress = '192.168.167.143'
+app.listen(3000, ipAddress, () => console.log(`Server running on port ${PORT}...`))
