@@ -54,5 +54,4 @@ app.all('*', (req, res) => {
     })
 })
 
-const ipAddress = '192.168.167.143'
-app.listen(3000, ipAddress, () => console.log(`Server running on port ${PORT}...`))
+app.listen(3000, () => console.log(`Server running on port ${PORT}...`))
