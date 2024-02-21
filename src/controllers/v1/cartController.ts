@@ -1,6 +1,5 @@
 import { Request, Response } from "express"
 import { prisma } from "@/prisma-client"
-import { getAmount } from "@/lib/helpers"
 
 const addToCart = async (req: Request, res: Response) => {
     const sessionId = req.cookies["africana_session_id"]
@@ -108,15 +107,15 @@ const viewCart = async (req: Request, res: Response) => {
         }
     })
 
-    const updatedCartItems = cart?.cartItem.map(item => {
-        return { ...item, productVariant: { ...item.productVariant, price: getAmount(item.productVariant.price) } }
-    })
+    // const updatedCartItems = cart?.cartItem.map(item => {
+    //     return { ...item, productVariant: { ...item.productVariant, price: getAmount(item.productVariant.price) } }
+    // })
 
-    const updatedCart = { ...cart, cartItem: updatedCartItems }
+    // const updatedCart = { ...cart, cartItem: updatedCartItems }
 
     return res.json({
         success: true,
-        cart: updatedCart
+        cart
     })
 }
 

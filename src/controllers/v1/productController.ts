@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/prisma-client'
-import { getAmount, setAmount, slugify } from '@/lib/helpers'
+import { slugify } from '@/lib/helpers'
 import { logger } from '@/lib/logger'
 
 const getProducts = async (req: Request, res: Response) => {
@@ -35,8 +35,8 @@ const getProducts = async (req: Request, res: Response) => {
                 productVariants: {
                     some: {
                         price: {
-                            gte: setAmount(parseInt(minPrice as string, 10)),
-                            lte: setAmount(parseInt(maxPrice as string, 10))
+                            gte: parseInt(minPrice as string, 10),
+                            lte: parseInt(maxPrice as string, 10)
                         }
                     }
                 }
@@ -99,23 +99,23 @@ const getProducts = async (req: Request, res: Response) => {
             skip,
         })
 
-        const updatedProducts = products.map(product => {
-            const updatedVariants = product.productVariants.map(variant => {
-                const oldPrice = variant.oldPrice ? getAmount(variant.oldPrice) : null
-                return { ...variant, price: getAmount(variant.price), oldPrice }
-            })
+        // const updatedProducts = products.map(product => {
+        //     const updatedVariants = product.productVariants.map(variant => {
+        //         const oldPrice = variant.oldPrice ? getAmount(variant.oldPrice) : null
+        //         return { ...variant, price: getAmount(variant.price), oldPrice }
+        //     })
 
-            return { ...product, productVariants: updatedVariants }
-        })
+        //     return { ...product, productVariants: updatedVariants }
+        // })
 
         const totalProducts = await prisma.product.count({
             where,
         })
 
-        return res.json({
+        res.json({
             success: true,
             total: totalProducts,
-            products: updatedProducts
+            products
         })
     } catch (error) {
         logger.error(error)
@@ -137,13 +137,14 @@ const createProduct = async (req: Request, res: Response) => {
                 currencyId: req.body.currency ?? 1,
                 lowOnStockMargin: req.body.lowOnStockMargin,
                 productVariants: {
-                    create: [
-                        ...productVariants.map(variant => ({
-                            ...variant,
-                            price: setAmount(variant.price),
-                            oldPrice: variant.oldPrice ? setAmount(variant.oldPrice) : null,
-                        }))
-                    ],
+                    // create: [
+                    //     ...productVariants.map(variant => ({
+                    //         ...variant,
+                    //         price: setAmount(variant.price),
+                    //         oldPrice: variant.oldPrice ? setAmount(variant.oldPrice) : null,
+                    //     }))
+                    // ],
+                    create: productVariants
                 },
                 productImages: {
                     create: [
@@ -197,15 +198,15 @@ const getProduct = async (req: Request, res: Response) => {
             }
         })
 
-        const updatedVariants = product?.productVariants.map(variant => {
-            return { ...variant, price: getAmount(variant.price), oldPrice: getAmount(variant.price) }
-        })
+        // const updatedVariants = product?.productVariants.map(variant => {
+        //     return { ...variant, price: getAmount(variant.price), oldPrice: getAmount(variant.price) }
+        // })
 
-        const updatedProduct = { ...product, productVariants: updatedVariants }
+        // const updatedProduct = { ...product, productVariants: updatedVariants }
 
         return res.json({
             success: true,
-            product: updatedProduct
+            product
         })
     } catch (error) {
         logger.error(error)
@@ -260,16 +261,8 @@ const updateProduct = async (req: Request, res: Response) => {
                 productVariants: {
                     upsert: productVariants.map(variant => ({
                         where: { sku: variant.sku },
-                        update: {
-                            ...variant,
-                            price: setAmount(variant.price),
-                            oldPrice: variant.oldPrice ? setAmount(variant.oldPrice) : null,
-                        },
-                        create: {
-                            ...variant,
-                            price: setAmount(variant.price),
-                            oldPrice: variant.oldPrice ? setAmount(variant.oldPrice) : null,
-                        }
+                        update: variant,
+                        create: variant
                     }))
                 },
                 productImages: {

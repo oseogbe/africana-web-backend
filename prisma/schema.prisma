@@ -184,7 +184,7 @@ model Order {
   status     OrderStatus @default(Pending)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
-  orderItem  OrderItem[]
+  orderItems OrderItem[]
   payment    Payment[]
 }
 

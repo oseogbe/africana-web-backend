@@ -1,13 +1,17 @@
-const getAmount = (amount: number) => {
-    return amount / 100
-}
-
-const setAmount = (amount: number) => {
-    return amount * 100
-}
-
 const generateRandomString = (length: number): string => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+'
+
+    let randomString = ''
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length)
+        randomString += characters.charAt(randomIndex)
+    }
+
+    return randomString
+}
+
+const generateRandomStringWithoutSymbols = (length: number): string => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
     let randomString = ''
     for (let i = 0; i < length; i++) {
@@ -28,9 +32,8 @@ const randomSelect = (list: string[]) => {
 }
 
 export {
-    getAmount,
-    setAmount,
     generateRandomString,
+    generateRandomStringWithoutSymbols,
     slugify,
     randomSelect,
 }
