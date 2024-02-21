@@ -12,7 +12,7 @@ const app: Express = express()
 const PORT = process.env.PORT || 3000
 
 const corsOptions: cors.CorsOptions = {
-    origin: ['*'],
+    origin: '*',
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: ['Accept', 'Content-Type', 'Origin', 'X-Requested-With'],
     exposedHeaders: [],

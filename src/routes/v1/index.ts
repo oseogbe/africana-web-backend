@@ -6,6 +6,7 @@ import auth from '@/routes/v1/auth'
 import categories from '@/routes/v1/categories'
 import currencies from '@/routes/v1/currencies'
 import products from '@/routes/v1/products'
+import taxes from '@/routes/v1/taxes'
 
 import { addToCart, viewCart } from '@/controllers/v1/cartController'
 
@@ -16,6 +17,7 @@ router.use('/auth', auth)
 router.use('/categories', categories)
 router.use('/currencies', currencies)
 router.use('/products', products)
+router.use('/taxes', taxes)
 router.get(
     '/add-to-cart',
     [
