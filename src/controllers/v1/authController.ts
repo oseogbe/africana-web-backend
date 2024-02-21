@@ -58,6 +58,58 @@ const login = async (req: Request, res: Response) => {
     }
 }
 
+const loginAdmin = async (req: Request, res: Response) => {
+    try {
+        const { email, password } = req.body
+
+        const admin = await prisma.admin.findUnique({ where: { email } })
+
+        if (admin && admin.password) {
+            const match = await bcrypt.compare(password, admin.password)
+            if (match) {
+                const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET
+                const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET
+
+                if (!accessTokenSecret || !refreshTokenSecret) {
+                    throw new Error('Access token or Refresh token secret is not defined')
+                }
+
+                const accessToken = jwt.sign({ "email": admin.email }, accessTokenSecret, { expiresIn: '30m' })
+                const refreshToken = jwt.sign({ "email": admin.email }, refreshTokenSecret, { expiresIn: '1d' })
+
+                await prisma.admin.update({
+                    where: { email },
+                    data: { refreshToken }
+                })
+
+                res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, secure: true, sameSite: 'none' })
+
+                res.json({
+                    success: true,
+                    message: "Login successful",
+                    accessToken,
+                })
+            } else {
+                res.status(401).json({
+                    success: false,
+                    message: "Check the email address and password and try again",
+                })
+            }
+        } else {
+            res.status(401).json({
+                success: false,
+                message: "Check the email address and password and try again",
+            })
+        }
+    } catch (error) {
+        logger.error(error)
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+        })
+    }
+}
+
 const register = async (req: Request, res: Response) => {
     try {
         const { firstName, lastName, email } = req.body
@@ -234,6 +286,7 @@ const logout = async (req: Request, res: Response) => {
 
 export {
     login,
+    loginAdmin,
     register,
     confirmEmail,
     changePassword,

@@ -1,6 +1,9 @@
 import { PrismaClient } from '@prisma/client'
-import { randomSelect, setAmount, slugify } from '../src/lib/helpers'
 import { faker } from '@faker-js/faker'
+import * as fs from 'fs'
+import csvParser from 'csv-parser'
+import bcrypt from 'bcrypt'
+import { randomSelect, slugify } from '../src/lib/helpers'
 
 const prisma = new PrismaClient()
 
@@ -15,6 +18,18 @@ interface CurrencyInterface {
 interface CategoryInterface {
     name: string;
     children?: any[];
+}
+
+async function seedAdmin() {
+    const password = await bcrypt.hash("shopafricana123", 10)
+    await prisma.admin.create({
+        data: {
+            name: "Africana Admin",
+            email: "admin@shopafricana.co",
+            password
+        }
+    })
+    console.log('Admin user created')
 }
 
 async function seedCurrencies(currenciesData: CurrencyInterface[]) {
@@ -81,18 +96,10 @@ async function seedProducts(length: number) {
                 currencyId: 1,
                 lowOnStockMargin: 2,
                 productVariants: {
-                    create: [
-                        ...productVariants.map(variant => ({
-                            ...variant,
-                            price: setAmount(variant.price),
-                            oldPrice: variant.oldPrice ? setAmount(variant.oldPrice) : null,
-                        }))
-                    ],
+                    create: productVariants,
                 },
                 productImages: {
-                    create: [
-                        ...productImages
-                    ],
+                    create: productImages,
                 },
             }
         })
@@ -220,8 +227,9 @@ async function main() {
     // await seedCurrencies(currenciesData)
     // await prisma.category.deleteMany({})
     // await seedCategories(categoriesData)
-    await prisma.product.deleteMany({})
-    await seedProducts(20)
+    // await prisma.product.deleteMany({})
+    // await seedProducts()
+    await seedAdmin()
 }
 
 main()

@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger'
+import { prisma } from '@/prisma-client'
 import { NextFunction, Request, Response } from 'express'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 
@@ -10,7 +12,7 @@ declare global {
     }
 }
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers['authorization']
     if (!authHeader) return res.sendStatus(401)
     // Bearer token
@@ -28,9 +30,23 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     })
 }
 
-// export const authenticateAdmin = (req: Request, res: Response, next: NextFunction) => {
-//     if(req.user.role === 'admin') {
-//         next()
-//     }
-//     res.sendStatus(403)
-// }
+const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    const email = req.user
+    try {
+        const admin = await prisma.admin.findUnique({
+            where: {
+                email
+            },
+        })
+        if (!admin) return res.sendStatus(403)
+        next()
+    } catch (error) {
+        logger.error('Error in isAdmin middleware:', error)
+        return res.status(500).send('Internal Server Error')
+    }
+}
+
+export {
+    authenticateToken,
+    isAdmin
+}

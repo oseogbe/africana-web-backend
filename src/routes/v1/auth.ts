@@ -1,5 +1,5 @@
 import express from 'express'
-import { login, register, logout, refreshToken, confirmEmail, changePassword } from '@/controllers/v1/authController'
+import { login, loginAdmin, register, logout, refreshToken, confirmEmail, changePassword } from '@/controllers/v1/authController'
 import { authenticateToken } from '@/middleware/authenticate'
 import { body } from 'express-validator'
 import { validateInput } from '@/middleware/validate'
@@ -30,6 +30,16 @@ router.post(
     ],
     validateInput,
     login
+)
+
+router.post(
+    '/admin/login',
+    [
+        body('email').isString().trim().isEmail().withMessage('Email is required'),
+        body('password').isString().notEmpty().withMessage('Password is required'),
+    ],
+    validateInput,
+    loginAdmin
 )
 
 router.post(
