@@ -1,9 +1,9 @@
 import express from 'express'
-import { body, query } from 'express-validator'
+import { body } from 'express-validator'
 import { prisma } from '@/prisma-client'
-import { createOrder, getOrders } from '@/controllers/v1/orderController'
+import { createOrder, getCustomerOrders, getOrders } from '@/controllers/v1/orderController'
 import { validateInput } from '@/middleware/validate'
-import { authenticateToken } from '@/middleware/authenticate'
+import { authenticateToken, isAdmin } from '@/middleware/authenticate'
 
 const router = express.Router()
 
@@ -39,9 +39,16 @@ router.post(
 )
 
 router.get(
+    '/all',
+    authenticateToken,
+    isAdmin,
+    getOrders
+)
+
+router.get(
     '/',
     authenticateToken,
-    getOrders
+    getCustomerOrders
 )
 
 export default router
