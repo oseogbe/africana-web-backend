@@ -7,6 +7,7 @@ import categories from '@/routes/v1/categories'
 import currencies from '@/routes/v1/currencies'
 import products from '@/routes/v1/products'
 import taxes from '@/routes/v1/taxes'
+import checkout from '@/routes/v1/checkout'
 import orders from '@/routes/v1/orders'
 
 import { addToCart, viewCart } from '@/controllers/v1/cartController'
@@ -29,5 +30,6 @@ router.get(
     addToCart
 )
 router.get('/view-cart', viewCart)
+router.use('/checkout', checkout)
 
 export default router
