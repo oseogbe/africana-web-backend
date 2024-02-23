@@ -14,7 +14,10 @@ const getCategories = async (req: Request, res: Response) => {
 
     } catch (error) {
         logger.error('Error fetching categories:', error)
-        res.status(500).json({ error: 'Internal Server Error' })
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred!'
+        })
     }
 }
 

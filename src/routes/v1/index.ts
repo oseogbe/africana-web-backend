@@ -11,6 +11,7 @@ import checkout from '@/routes/v1/checkout'
 import orders from '@/routes/v1/orders'
 
 import { addToCart, viewCart } from '@/controllers/v1/cartController'
+import { verifyFlwTransaction } from '@/controllers/v1/paymentController'
 
 const router = express.Router()
 
@@ -29,6 +30,8 @@ router.get(
     ],
     addToCart
 )
+router.get('/view-cart', viewCart)
+router.get('/flutterwave/payment-callback', verifyFlwTransaction)
 router.get('/view-cart', viewCart)
 router.use('/checkout', checkout)
 

@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
 import axios from "axios"
+import { Customer } from "@prisma/client"
 import { prisma } from "@/prisma-client"
 import { generateRandomStringWithoutSymbols } from "@/lib/helpers"
 import { logger } from "@/lib/logger"
@@ -9,6 +10,8 @@ interface OrderItem {
     quantity: number;
 }
 
+type CustomerDetails = Pick<Customer, "firstName" | "lastName" | "email" | "phone">
+
 export const checkout = async (req: Request, res: Response) => {
     try {
         const { customer, orderItems, paymentMethod, taxId } = req.body
@@ -16,12 +19,14 @@ export const checkout = async (req: Request, res: Response) => {
 
         let result = null
 
+        const baseUrl = `${req.protocol}://${req.get('host')}`
+
         switch (paymentMethod) {
             case "flutterwave":
                 result = await initializeRavePayment(
-                    customer.email,
+                    customer,
                     totalAmount,
-                    `${req.protocol}://${req.hostname}`
+                    baseUrl
                 )
                 break;
 
@@ -81,28 +86,45 @@ const calculateTotalAmount = async (orderItems: OrderItem[], taxId: number) => {
     return total + parseFloat(taxAmount.value as unknown as string)
 }
 
-const initializeRavePayment = async (email: string, amount: number, redirect_url: string): Promise<any> => {
+const initializeRavePayment = async (customer: CustomerDetails, amount: number, baseUrl: string): Promise<any> => {
     const headers = {
-        Authorization: `Bearer ${process.env.RAVE_SECRET_KEY}`,
+        Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
         'Content-Type': 'application/json',
     }
 
+    const tx_ref = generateRandomStringWithoutSymbols(16)
+
     const requestBody = {
-        tx_ref: generateRandomStringWithoutSymbols(16),
+        tx_ref,
         amount,
         currency: 'NGN',
-        redirect_url,
+        redirect_url: `${baseUrl}/api/v1/flutterwave/payment-callback`,
         payment_options: 'card',
         customer: {
-            email,
-            // Add more customer details if required
+            name: `${customer.firstName} ${customer.lastName}`,
+            email: customer.email,
+            phone: customer?.phone,
+        },
+        meta: {
+
         },
         customizations: {
             title: 'Africana Couture',
             description: 'Payment of order items from Africana e-commerce',
-            // You can customize other parameters like logo, theme color, etc.
+            logo: `${baseUrl}/img/africana-logo.png`
         },
     }
+
+    await prisma.payment.create({
+        data: {
+            channel: "Flutterwave",
+            reference: tx_ref,
+            amount,
+            meta: {
+                email: customer.email
+            }
+        }
+    })
 
     const response = await axios.post('https://api.flutterwave.com/v3/payments', requestBody, { headers })
     return response.data

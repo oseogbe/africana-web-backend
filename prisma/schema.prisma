@@ -219,7 +219,7 @@ model Payment {
   order       Order?        @relation(fields: [orderId], references: [id])
   orderId     String?
   channel     String
-  reference   String
+  reference   String        @unique
   amount      Int
   meta        Json?
   status      PaymentStatus @default(Pending)
