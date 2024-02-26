@@ -1,6 +1,7 @@
 import express from "express"
 import { body } from "express-validator"
-import { checkout } from "@/controllers/v1/checkoutController"
+import { prisma } from '@/prisma-client'
+import { CheckoutItem, checkout } from "@/controllers/v1/checkoutController"
 import { validateInput } from "@/middleware/validate"
 
 const router = express.Router()
@@ -21,7 +22,23 @@ router.post(
         body('customer.country').isString().trim().notEmpty().withMessage('Country required'),
         body('customer.notes').optional().isString().trim(),
         body('orderItems').isArray({ min: 1 }).withMessage('Order items required'),
-        body('orderItems.*.productVariantId').isString().trim().notEmpty().withMessage('Product variant id required'),
+        body('orderItems.*.productVariantId').isString().trim().notEmpty().withMessage('Product variant id required')
+            .custom(async (value, { req }) => {
+                const orderItemIndex = req.body.orderItems.findIndex((item: CheckoutItem) => item.productVariantId === value)
+                const quantity = req.body.orderItems[orderItemIndex].quantity
+                const variant = await prisma.productVariant.findFirst({
+                    where: {
+                        id: value,
+                        quantity: {
+                            gte: quantity
+                        }
+                    }
+                })
+                if (!variant) {
+                    throw new Error('Product variant ordered exceeds available quantity')
+                }
+                return true
+            }),
         body('orderItems.*.quantity').isNumeric(),
         body('taxId').isNumeric(),
         body('paymentMethod').isIn(['flutterwave', 'paystack']).withMessage('Invalid payment method')

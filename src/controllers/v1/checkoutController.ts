@@ -1,11 +1,11 @@
 import { Request, Response } from "express"
 import axios from "axios"
-import { Customer } from "@prisma/client"
+import { Customer, Order } from "@prisma/client"
 import { prisma } from "@/prisma-client"
 import { generateRandomStringWithoutSymbols } from "@/lib/helpers"
 import { logger } from "@/lib/logger"
 
-interface OrderItem {
+export type CheckoutItem = {
     productVariantId: string;
     quantity: number;
 }
@@ -15,23 +15,67 @@ type CustomerDetails = Pick<Customer, "firstName" | "lastName" | "email" | "phon
 export const checkout = async (req: Request, res: Response) => {
     try {
         const { customer, orderItems, paymentMethod, taxId } = req.body
-        const totalAmount = await calculateTotalAmount(orderItems, taxId)
+
+        let existingUser = await prisma.customer.findUnique({
+            where: { email: customer.email },
+        })
+
+        if (!existingUser) {
+            const response = await axios.post(`${process.env.APP_URL}/api/v1/auth/register`, {
+                firstName: customer.firstName,
+                lastName: customer.lastName,
+                email: customer.email
+            })
+            existingUser = response.data.customer as Customer
+        }
+
+        const subTotal = await calculateSubTotal(orderItems)
+        const total = await calculateTotal(subTotal, taxId)
+
+        const orderItemsData = await Promise.all(orderItems.map(async (item: any) => {
+            const productVariant = await prisma.productVariant.findUnique({
+                where: { id: item.productVariantId },
+                select: { price: true }
+            });
+            return {
+                ...item,
+                pricePerItem: productVariant ? productVariant.price : 0
+            };
+        }))
+
+        const order = await prisma.order.create({
+            data: {
+                code: generateRandomStringWithoutSymbols(12),
+                customerId: existingUser.id,
+                subTotal,
+                taxId,
+                total,
+                address1: customer.address1,
+                address2: customer.address2,
+                postalCode: customer.postalCode,
+                city: customer.city,
+                state: customer.state,
+                country: customer.country,
+                notes: customer.notes,
+                orderItems: {
+                    create: orderItemsData
+                }
+            }
+        })
 
         let result = null
-
-        const baseUrl = `${req.protocol}://${req.get('host')}`
 
         switch (paymentMethod) {
             case "flutterwave":
                 result = await initializeRavePayment(
                     customer,
-                    totalAmount,
-                    baseUrl
+                    order,
+                    total,
                 )
-                break;
+                break
 
             default:
-                break;
+                break
         }
 
         return res.json(result)
@@ -45,8 +89,8 @@ export const checkout = async (req: Request, res: Response) => {
     }
 }
 
-const calculateTotalAmount = async (orderItems: OrderItem[], taxId: number) => {
-    let total = 0
+const calculateSubTotal = async (orderItems: CheckoutItem[]) => {
+    let subTotal = 0
 
     for (const item of orderItems) {
         const productVariant = await prisma.productVariant.findUnique({
@@ -59,12 +103,14 @@ const calculateTotalAmount = async (orderItems: OrderItem[], taxId: number) => {
         })
 
         if (productVariant) {
-            total += productVariant.price * item.quantity
-        } else {
-            throw new Error(`Product variant with id ${item.productVariantId} not found`);
+            subTotal += productVariant.price * item.quantity
         }
     }
 
+    return subTotal
+}
+
+const calculateTotal = async (subTotal: number, taxId: number) => {
     const taxAmount = await prisma.tax.findUnique({
         where: {
             id: taxId
@@ -80,49 +126,57 @@ const calculateTotalAmount = async (orderItems: OrderItem[], taxId: number) => {
     }
 
     if (taxAmount.type === "Percentage") {
-        return total + (total * parseFloat(taxAmount.value as unknown as string) / 100)
+        return subTotal + (subTotal * parseFloat(taxAmount.value as unknown as string) / 100)
     }
 
-    return total + parseFloat(taxAmount.value as unknown as string)
+    return subTotal + parseFloat(taxAmount.value as unknown as string)
 }
 
-const initializeRavePayment = async (customer: CustomerDetails, amount: number, baseUrl: string): Promise<any> => {
+const initializeRavePayment = async (customer: CustomerDetails, order: Order, amount: number): Promise<any> => {
     const headers = {
         Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
         'Content-Type': 'application/json',
     }
 
-    const tx_ref = generateRandomStringWithoutSymbols(16)
+    const tx_ref = generateRandomStringWithoutSymbols(12)
 
     const requestBody = {
         tx_ref,
         amount,
         currency: 'NGN',
-        redirect_url: `${baseUrl}/api/v1/flutterwave/payment-callback`,
+        redirect_url: process.env.FLW_PAYMENT_CALLBACK_URL,
         payment_options: 'card',
         customer: {
             name: `${customer.firstName} ${customer.lastName}`,
             email: customer.email,
             phone: customer?.phone,
         },
-        meta: {
-
-        },
+        meta: {},
         customizations: {
             title: 'Africana Couture',
             description: 'Payment of order items from Africana e-commerce',
-            logo: `${baseUrl}/img/africana-logo.png`
+            logo: `${process.env.APP_URL}/img/africana-logo.png`
         },
+    }
+
+    const currency = await prisma.currency.findUnique({
+        where: {
+            code: 'NGN'
+        }
+    })
+
+    if (!currency) {
+        throw new Error('Currency not found')
     }
 
     await prisma.payment.create({
         data: {
+            orderId: order.id,
             channel: "Flutterwave",
             reference: tx_ref,
             amount,
-            meta: {
-                email: customer.email
-            }
+            currencyId: currency.id,
+            meta: {},
         }
     })
 

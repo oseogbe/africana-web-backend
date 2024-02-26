@@ -135,7 +135,8 @@ const register = async (req: Request, res: Response) => {
 
         res.json({
             success: true,
-            message: 'Confirmation email sent'
+            message: 'Confirmation email sent',
+            customer
         })
     } catch (error) {
         logger.error(error)
