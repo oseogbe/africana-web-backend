@@ -36,11 +36,11 @@ export const checkout = async (req: Request, res: Response) => {
             const productVariant = await prisma.productVariant.findUnique({
                 where: { id: item.productVariantId },
                 select: { price: true }
-            });
+            })
             return {
                 ...item,
                 pricePerItem: productVariant ? productVariant.price : 0
-            };
+            }
         }))
 
         const order = await prisma.order.create({
@@ -144,7 +144,7 @@ const initializeRavePayment = async (customer: CustomerDetails, order: Order, am
         tx_ref,
         amount,
         currency: 'NGN',
-        redirect_url: process.env.FLW_PAYMENT_CALLBACK_URL,
+        redirect_url: `${process.env.FRONTEND_URL}/flutterwave/payment-callback`,
         payment_options: 'card',
         customer: {
             name: `${customer.firstName} ${customer.lastName}`,
