@@ -3,8 +3,7 @@ import { faker } from '@faker-js/faker'
 import * as fs from 'fs'
 import csvParser from 'csv-parser'
 import bcrypt from 'bcrypt'
-import slugify from '@sindresorhus/slugify'
-import { generateRandomStringWithoutSymbols, randomSelect } from '../src/lib/helpers'
+import { generateRandomStringWithoutSymbols, randomSelect, slugifyStr } from '../src/lib/helpers'
 
 const prisma = new PrismaClient()
 
@@ -37,6 +36,7 @@ interface ProductImage {
 
 interface ProductFromFile {
     name: string;
+    slug: string;
     description: string;
     productVariants: ProductVariant[];
     productImages: ProductImage[];
@@ -66,7 +66,7 @@ async function seedCurrencies(currenciesData: CurrencyInterface[]) {
 async function seedCategories(categoriesData: CategoryInterface[], parentId?: number, parentSlug?: string) {
     for (const categoryData of categoriesData) {
         const { name, children } = categoryData
-        const slug = slugify(name)
+        const slug = slugifyStr(name)
 
         const category = await prisma.category.create({
             data: {
@@ -113,7 +113,7 @@ async function seedProducts(length: number) {
         const product = await prisma.product.create({
             data: {
                 name: productName,
-                slug: slugify(productName),
+                slug: slugifyStr(productName),
                 description: faker.commerce.productDescription(),
                 currencyId: 1,
                 lowOnStockMargin: 2,
@@ -165,6 +165,7 @@ function readCSV(filePath: string) {
             .pipe(csvParser())
             .on('data', async (row) => {
                 const name = row.name
+                const slug = slugifyStr(row.name)
                 const description = row.description
                 const price = row['productVariants:price'] as string
                 const productVariants = [
@@ -183,7 +184,7 @@ function readCSV(filePath: string) {
                         isDefault: true
                     },
                 ]
-                products.push({ name, description, productVariants, productImages });
+                products.push({ name, slug, description, productVariants, productImages })
             }).on('end', () => {
                 resolve(products)
             })
@@ -197,12 +198,12 @@ async function seedProductsFromJsonFile() {
     const productsData = await readCSV(`${__dirname}/products.csv`) as ProductFromFile[]
 
     for (const productData of productsData) {
-        const { name, description, productVariants, productImages } = productData
+        const { name, slug, description, productVariants, productImages } = productData
 
         const product = await prisma.product.create({
             data: {
                 name,
-                slug: slugify(name),
+                slug,
                 description,
                 currencyId: 1,
                 lowOnStockMargin: 2,

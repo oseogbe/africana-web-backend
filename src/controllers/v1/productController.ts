@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/prisma-client'
-import slugify from '@sindresorhus/slugify';
 import { logger } from '@/lib/logger'
+import { slugifyStr } from '@/lib/helpers'
 
 const getProducts = async (req: Request, res: Response) => {
     try {
@@ -134,7 +134,7 @@ const createProduct = async (req: Request, res: Response) => {
         const product = await prisma.product.create({
             data: {
                 name: req.body.name,
-                slug: slugify(req.body.name),
+                slug: slugifyStr(req.body.name),
                 description: req.body.description,
                 currencyId: req.body.currency ?? 1,
                 lowOnStockMargin: req.body.lowOnStockMargin,
@@ -235,7 +235,7 @@ const updateProduct = async (req: Request, res: Response) => {
             })
         }
 
-        const newSlug = slugify(req.body.name)
+        const newSlug = slugifyStr(req.body.name)
         const isSlugNotAvailable = await prisma.product.findUnique({
             where: {
                 slug: newSlug,

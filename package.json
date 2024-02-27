@@ -25,7 +25,6 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^5.8.1",
-    "@sindresorhus/slugify": "^2.2.1",
     "axios": "^1.6.7",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
@@ -38,6 +37,7 @@
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.8",
+    "slugify": "^1.6.6",
     "winston": "^3.11.0",
     "winston-daily-rotate-file": "^4.7.1"
   },

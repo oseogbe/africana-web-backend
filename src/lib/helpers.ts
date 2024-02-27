@@ -1,3 +1,5 @@
+import slugify from "slugify"
+
 const generateRandomString = (length: number): string => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+'
 
@@ -27,8 +29,16 @@ const randomSelect = (list: string[]) => {
     return list[randomIndex]
 }
 
+const slugifyStr = (name: string) => {
+    return slugify(name, {
+        remove: /[*+~.()'"!:@]/g,
+        lower: true
+    })
+}
+
 export {
     generateRandomString,
     generateRandomStringWithoutSymbols,
     randomSelect,
+    slugifyStr,
 }
