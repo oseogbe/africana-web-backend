@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/prisma-client'
-import { slugify } from '@/lib/helpers'
+import slugify from '@sindresorhus/slugify';
 import { logger } from '@/lib/logger'
 
 const getProducts = async (req: Request, res: Response) => {
@@ -17,6 +17,8 @@ const getProducts = async (req: Request, res: Response) => {
             limit,
             latest,
         } = req.query
+
+        // TODO: front-end should display out-of-stock products
 
         let where = {}
 

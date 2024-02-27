@@ -22,10 +22,6 @@ const generateRandomStringWithoutSymbols = (length: number): string => {
     return randomString
 }
 
-const slugify = (word: string) => {
-    return word.toLowerCase().replace(/\s+/g, '-')
-}
-
 const randomSelect = (list: string[]) => {
     const randomIndex = Math.floor(Math.random() * list.length)
     return list[randomIndex]
@@ -34,6 +30,5 @@ const randomSelect = (list: string[]) => {
 export {
     generateRandomString,
     generateRandomStringWithoutSymbols,
-    slugify,
     randomSelect,
 }

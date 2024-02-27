@@ -115,7 +115,7 @@ model ProductVariant {
   cartItem  CartItem[]
   wishlist  Wishlist[]
 
-  @@unique([size, color])
+  @@unique([productId, size, color])
 }
 
 model ProductImage {
