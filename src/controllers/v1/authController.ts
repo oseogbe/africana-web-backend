@@ -156,7 +156,12 @@ const confirmEmail = async (req: Request, res: Response) => {
 
         if (!customer) return res.sendStatus(404)
 
-        if (customer.emailVerifiedAt) return res.json("Email already verified")
+        if (customer.emailVerifiedAt) {
+            return res.json({
+                success: true,
+                message: 'Email already verified!'
+            })
+        }
 
         const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET
 
