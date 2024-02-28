@@ -4,6 +4,7 @@ import { validateInput } from '@/middleware/validate'
 
 import auth from '@/routes/v1/auth'
 import categories from '@/routes/v1/categories'
+import tags from '@/routes/v1/tags'
 import currencies from '@/routes/v1/currencies'
 import products from '@/routes/v1/products'
 import taxes from '@/routes/v1/taxes'
@@ -17,6 +18,7 @@ const router = express.Router()
 
 router.use('/auth', auth)
 router.use('/categories', categories)
+router.use('/tags', tags)
 router.use('/currencies', currencies)
 router.use('/products', products)
 router.use('/taxes', taxes)

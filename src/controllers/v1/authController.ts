@@ -131,7 +131,7 @@ const register = async (req: Request, res: Response) => {
         })
 
         // client url to confirm email will make a post request to backend
-        sendConfirmationEmail(customer.email, 'https://shopafricana.co/confirm-email')
+        sendConfirmationEmail(customer.email, `${process.env.FRONTEND_URL}/confirm-email`)
 
         res.json({
             success: true,
@@ -179,7 +179,7 @@ const confirmEmail = async (req: Request, res: Response) => {
             }
         })
 
-        sendLoginDetailsEmail(customer.email, password, 'https://shopafricana.co/login')
+        sendLoginDetailsEmail(customer.email, password, `${process.env.FRONTEND_URL}/login`)
 
         res.json({
             success: true,
