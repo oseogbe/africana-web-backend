@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import path from 'path'
 import cookieParser from 'cookie-parser'
+import * as useragent from 'express-useragent'
 import 'dotenv/config'
 import routes from '@/routes/v1'
 import { CustomError } from 'typings'
@@ -22,11 +23,16 @@ const corsOptions: cors.CorsOptions = {
 app.use(cors(corsOptions))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(useragent.express())
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '..', 'public')))
 
 app.get('/ping', (req, res) => {
-    res.send("pong")
+    // res.send("pong")
+    res.json({
+        africanaCookie: req.cookies["africana_session_id"],
+        userAgent: req.useragent?.source
+    })
 })
 
 app.use('/api/v1', routes)
