@@ -152,6 +152,16 @@ async function seedProducts(length: number) {
             }
         })
 
+        const totalQuantity = await getProductTotalQuantity(product.id)
+
+        await prisma.product.update({
+            where: {
+                id: product.id
+            },
+            data: {
+                totalQuantity
+            }
+        })
     })
 
     console.log('Test products seeded successfully')
@@ -241,9 +251,34 @@ async function seedProductsFromJsonFile() {
                 }
             }
         })
+
+        const totalQuantity = await getProductTotalQuantity(product.id)
+
+        await prisma.product.update({
+            where: {
+                id: product.id
+            },
+            data: {
+                totalQuantity
+            }
+        })
     }
 
     console.log('Test products seeded successfully')
+}
+
+const getProductTotalQuantity = async (productId: string) => {
+    const productVariants = await prisma.productVariant.findMany({
+        where: {
+            productId: productId
+        }
+    })
+
+    const totalQuantity = productVariants.reduce((acc, variant) => {
+        return acc + variant.quantity
+    }, 0)
+
+    return totalQuantity
 }
 
 const currenciesData = [
@@ -335,19 +370,19 @@ const categoriesData = [
 
 async function main() {
     // await prisma.currency.deleteMany({})
-    // await seedCurrencies(currenciesData)
+    await seedCurrencies(currenciesData)
     // await prisma.category.deleteMany({})
-    // await seedCategories(categoriesData)
-    await prisma.payment.deleteMany({})
-    await prisma.orderItem.deleteMany({})
-    await prisma.order.deleteMany({})
-    await prisma.productVariant.deleteMany({})
-    await prisma.productImage.deleteMany({})
-    await prisma.productReview.deleteMany({})
-    await prisma.product.deleteMany({})
+    await seedCategories(categoriesData)
+    // await prisma.payment.deleteMany({})
+    // await prisma.orderItem.deleteMany({})
+    // await prisma.order.deleteMany({})
+    // await prisma.productVariant.deleteMany({})
+    // await prisma.productImage.deleteMany({})
+    // await prisma.productReview.deleteMany({})
+    // await prisma.product.deleteMany({})
     // await seedProducts(20)
     await seedProductsFromJsonFile()
-    // await seedAdmin()
+    await seedAdmin()
 }
 
 main()

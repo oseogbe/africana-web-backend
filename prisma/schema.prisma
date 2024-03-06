@@ -92,11 +92,13 @@ model Product {
   currency         Currency         @relation(fields: [currencyId], references: [id])
   currencyId       Int
   isFeatured       Boolean          @default(false)
+  totalQuantity    Int              @default(0)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   productVariants  ProductVariant[]
   productImages    ProductImage[]
   productReviews   ProductReview[]
+  ProductView      ProductView[]
 }
 
 model ProductVariant {
@@ -134,6 +136,15 @@ model ProductReview {
   productId String
   comment   String?  @db.Text
   stars     Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductView {
+  id        Int      @id @default(autoincrement())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  count     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
