@@ -110,12 +110,18 @@ async function seedProducts(length: number) {
             },
         ]
 
+        const currency = await prisma.currency.findFirst()
+
+        if (!currency) {
+            throw new Error('Currency does not exist!')
+        }
+
         const product = await prisma.product.create({
             data: {
                 name: productName,
                 slug: slugifyStr(productName),
                 description: faker.commerce.productDescription(),
-                currencyId: 1,
+                currencyId: currency.id,
                 lowOnStockMargin: 2,
                 productVariants: {
                     create: productVariants,
@@ -207,6 +213,12 @@ function readCSV(filePath: string) {
 async function seedProductsFromJsonFile() {
     const productsData = await readCSV(`${__dirname}/products.csv`) as ProductFromFile[]
 
+    const currency = await prisma.currency.findFirst()
+
+    if (!currency) {
+        throw new Error('Currency does not exist!')
+    }
+
     for (const productData of productsData) {
         const { name, slug, description, productVariants, productImages } = productData
 
@@ -215,7 +227,7 @@ async function seedProductsFromJsonFile() {
                 name,
                 slug,
                 description,
-                currencyId: 1,
+                currencyId: currency.id,
                 lowOnStockMargin: 2,
                 productVariants: {
                     create: productVariants,
