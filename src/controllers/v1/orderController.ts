@@ -124,7 +124,8 @@ const getOrders = async (req: Request, res: Response) => {
                         }
                     },
                 }
-            }
+            },
+            payment: true,
         },
         orderBy: {
             createdAt: "desc"
