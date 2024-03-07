@@ -1,11 +1,21 @@
 import express from 'express'
 import { body, query } from 'express-validator'
 import { prisma } from '@/prisma-client'
-import { getProducts, createProduct, getProduct, deleteProduct, updateProduct } from '@/controllers/v1/productController'
+import {
+    getProducts,
+    createProduct,
+    getProduct,
+    deleteProduct,
+    updateProduct,
+    getProductViews,
+    updateProductViews,
+} from '@/controllers/v1/productController'
 import { authenticateToken } from '@/middleware/authenticate'
 import { validateInput } from '@/middleware/validate'
 
 const router = express.Router()
+
+router.get('/views', getProductViews)
 
 router.get(
     '/',
@@ -78,6 +88,8 @@ router.post(
 )
 
 router.get('/:slug', getProduct)
+
+router.get('/:slug/set-view-count', updateProductViews)
 
 router.put(
     '/:slug',

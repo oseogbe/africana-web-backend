@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/prisma-client'
 import { logger } from '@/lib/logger'
 import { slugifyStr } from '@/lib/helpers'
+import dayjs from 'dayjs'
 
 const getProducts = async (req: Request, res: Response) => {
     try {
@@ -17,8 +18,6 @@ const getProducts = async (req: Request, res: Response) => {
             limit,
             latest,
         } = req.query
-
-        // TODO: front-end should display out-of-stock products
 
         let where = {}
 
@@ -211,6 +210,13 @@ const getProduct = async (req: Request, res: Response) => {
             }
         })
 
+        if (!product) {
+            return res.json({
+                success: false,
+                message: "Product does not exist"
+            })
+        }
+
         // const updatedVariants = product?.productVariants.map(variant => {
         //     return { ...variant, price: getAmount(variant.price), oldPrice: getAmount(variant.price) }
         // })
@@ -224,6 +230,30 @@ const getProduct = async (req: Request, res: Response) => {
     } catch (error) {
         logger.error(error)
     }
+}
+
+const getProductViews = async (req: Request, res: Response) => {
+    const productViews = await prisma.productView.findMany({
+        orderBy: {
+            createdAt: 'desc',
+        },
+        include: {
+            product: {
+                select: {
+                    name: true,
+                    slug: true
+                }
+            },
+            _count: {
+                select: { visitors: true }
+            }
+        }
+    })
+
+    return res.json({
+        success: true,
+        productViews
+    })
 }
 
 const updateProduct = async (req: Request, res: Response) => {
@@ -315,6 +345,93 @@ const updateProduct = async (req: Request, res: Response) => {
     }
 }
 
+const updateProductViews = async (req: Request, res: Response) => {
+    // req.cookies["africana_session_id"]
+    const visitor = req.useragent?.source as string
+
+    const product = await prisma.product.findUnique({
+        where: {
+            slug: req.params.slug
+        },
+    })
+
+    if (!product) {
+        return res.json({
+            success: false,
+            message: "Product does not exist"
+        })
+    }
+
+    const today = dayjs()
+    const startOfMonth = today.startOf('month').toISOString()
+    const endOfMonth = today.endOf('month').toISOString()
+
+    const productView = await prisma.productView.findFirst({
+        where: {
+            productId: product.id,
+            createdAt: {
+                gt: startOfMonth,
+                lte: endOfMonth
+            },
+        },
+        include: {
+            visitors: true
+        }
+    })
+
+    if (productView) {
+        const existingVisitor = productView.visitors.find(v => v.visitor === visitor)
+
+        if (existingVisitor) {
+            return res.json({
+                success: true,
+                message: "Product already viewed by client this month"
+            })
+        } else {
+            const productViewUpdated = await prisma.productView.update({
+                where: {
+                    id: productView.id,
+                },
+                data: {
+                    visitors: {
+                        create: {
+                            visitor
+                        }
+                    }
+                }
+            })
+
+            if (productViewUpdated) {
+                return res.json({
+                    success: true,
+                    message: "New product view this month"
+                })
+            }
+        }
+
+    } else {
+        await prisma.productView.create({
+            data: {
+                product: {
+                    connect: {
+                        id: product.id,
+                    }
+                },
+                visitors: {
+                    create: {
+                        visitor
+                    }
+                }
+            }
+        })
+
+        return res.json({
+            success: true,
+            message: "First product view this month"
+        })
+    }
+}
+
 const deleteProduct = async (req: Request, res: Response) => {
     try {
         await prisma.product.delete({
@@ -350,6 +467,8 @@ export {
     getProducts,
     createProduct,
     getProduct,
+    getProductViews,
     updateProduct,
-    deleteProduct
+    updateProductViews,
+    deleteProduct,
 }

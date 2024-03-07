@@ -141,15 +141,21 @@ model ProductReview {
 }
 
 model ProductView {
-  id        Int      @id @default(autoincrement())
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id        Int       @id @default(autoincrement())
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
-  count     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  visitors  Visitor[]
 }
 
-// consider switching to Redis
+model Visitor {
+  id            Int         @id @default(autoincrement())
+  productView   ProductView @relation(fields: [productViewId], references: [id])
+  productViewId Int
+  visitor       String
+}
+
 model Cart {
   id         String     @id @default(uuid())
   user       String?    @unique

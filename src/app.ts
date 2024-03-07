@@ -28,11 +28,7 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '..', 'public')))
 
 app.get('/ping', (req, res) => {
-    // res.send("pong")
-    res.json({
-        africanaCookie: req.cookies["africana_session_id"],
-        userAgent: req.useragent?.source
-    })
+    res.send("pong")
 })
 
 app.use('/api/v1', routes)
