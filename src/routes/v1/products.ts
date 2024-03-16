@@ -10,7 +10,8 @@ import {
     getProductViews,
     updateProductViews,
 } from '@/controllers/v1/productController'
-import { authenticateToken } from '@/middleware/authenticate'
+import { addReview, deleteProductReview } from '@/controllers/v1/productReviewController'
+import { authenticateToken, isAdmin } from '@/middleware/authenticate'
 import { validateInput } from '@/middleware/validate'
 
 const router = express.Router()
@@ -119,6 +120,24 @@ router.put(
         validateInput,
     ],
     updateProduct
+)
+
+router.post(
+    '/:slug/add-review',
+    [
+        body('comment').isString().trim().notEmpty().withMessage('Comment required'),
+        body('stars').optional().isInt({ min: 1, max: 5 }),
+        validateInput,
+    ],
+    authenticateToken,
+    addReview
+)
+
+router.delete(
+    '/:reviewId/delete-review',
+    authenticateToken,
+    isAdmin,
+    deleteProductReview
 )
 
 router.delete('/:slug', deleteProduct)

@@ -95,6 +95,7 @@ const getProducts = async (req: Request, res: Response) => {
             include: {
                 productVariants: true,
                 productImages: true,
+                productReviews: true,
             },
             take,
             skip,
@@ -205,6 +206,7 @@ const getProduct = async (req: Request, res: Response) => {
             include: {
                 productVariants: true,
                 productImages: true,
+                productReviews: true,
                 categories: true,
                 tags: true,
             }

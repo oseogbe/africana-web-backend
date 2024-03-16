@@ -34,7 +34,6 @@ router.get(
 )
 router.get('/view-cart', viewCart)
 router.get('/flutterwave/payment-callback', verifyFlwTransaction)
-router.get('/view-cart', viewCart)
 router.use('/checkout', checkout)
 
 export default router
