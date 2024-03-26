@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/prisma-client'
 import { logger } from '@/lib/logger'
-import { slugifyStr } from '@/lib/helpers'
+import { generateRandomStringWithoutSymbols, slugifyStr } from '@/lib/helpers'
 import dayjs from 'dayjs'
 
 const getProducts = async (req: Request, res: Response) => {
@@ -134,7 +134,7 @@ const createProduct = async (req: Request, res: Response) => {
         const product = await prisma.product.create({
             data: {
                 name: req.body.name,
-                slug: slugifyStr(req.body.name),
+                slug: `${slugifyStr(req.body.name)}-${generateRandomStringWithoutSymbols(6)}`,
                 description: req.body.description,
                 currencyId: req.body.currency ?? 1,
                 lowOnStockMargin: req.body.lowOnStockMargin,

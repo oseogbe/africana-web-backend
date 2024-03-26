@@ -9,7 +9,7 @@ const generateRandomString = (length: number): string => {
         randomString += characters.charAt(randomIndex)
     }
 
-    return randomString
+    return randomString.toLowerCase()
 }
 
 const generateRandomStringWithoutSymbols = (length: number): string => {
@@ -21,7 +21,7 @@ const generateRandomStringWithoutSymbols = (length: number): string => {
         randomString += characters.charAt(randomIndex)
     }
 
-    return randomString
+    return randomString.toLowerCase()
 }
 
 const randomSelect = (list: string[]) => {

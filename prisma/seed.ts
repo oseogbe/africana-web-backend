@@ -40,6 +40,11 @@ interface ProductFromFile {
     description: string;
     productVariants: ProductVariant[];
     productImages: ProductImage[];
+    categories: { id: number }[];
+}
+
+function pascalCase(word: string) {
+    return word.charAt(0).toUpperCase() + word.slice(1)
 }
 
 async function seedAdmin() {
@@ -173,34 +178,81 @@ async function seedProducts(length: number) {
     console.log('Test products seeded successfully')
 }
 
-function readCSV(filePath: string) {
+async function readCSV(filePath: string) {
     return new Promise((resolve, reject) => {
         const products: ProductFromFile[] = []
 
         fs.createReadStream(filePath)
             .pipe(csvParser())
             .on('data', async (row) => {
-                const name = row.name
-                const slug = slugifyStr(row.name)
-                const description = row.description
-                const price = row['productVariants:price'] as string
+                const name = pascalCase(row.productname)
+                const slug = slugifyStr(row.productname)
+                const description = row.productname
+                // const price = row['productVariants:price'] as string
                 const productVariants = [
                     {
                         sku: faker.string.alphanumeric({ length: { min: 8, max: 12 } }),
-                        size: row['productVariants:size'],
-                        color: row['productVariants:color'],
-                        price: parseInt(price.slice(1), 10),
+                        // size: row['productVariants:size'],
+                        size: randomSelect(['S', 'M', 'L']),
+                        // color: row['productVariants:color'],
+                        color: randomSelect(['White', 'Grey', 'Black']),
+                        // price: parseInt(price.slice(1), 10),
+                        price: 100000,
                         oldPrice: null,
                         quantity: 1,
                     }
                 ]
-                const productImages = [
-                    {
-                        url: row['productImages:url'] || `https://shopafricana.co/wp-content/uploads/2024/01/${generateRandomStringWithoutSymbols(12).toLowerCase()}.jpg`,
-                        isDefault: true
-                    },
-                ]
-                products.push({ name, slug, description, productVariants, productImages })
+
+                let categories: { id: number }[]
+
+                switch (row.category) {
+                    case 'africana pen':
+                        categories = await prisma.category.findMany({ where: { name: 'Pens' }, select: { id: true } })
+                        break
+                    case 'bags':
+                        categories = await prisma.category.findMany({ where: { name: 'Bags' }, select: { id: true } })
+                        break
+                    case 'face caps':
+                        categories = await prisma.category.findMany({ where: { name: 'Caps' }, select: { id: true } })
+                        break
+                    case 'flip flops':
+                        categories = await prisma.category.findMany({ where: { name: 'Slippers' }, select: { id: true } })
+                        break
+                    case 'kaftans':
+                        categories = await prisma.category.findMany({ where: { name: 'Kaftan' }, select: { id: true } })
+                        break
+                    case 'lounge wears':
+                        categories = await prisma.category.findMany({ where: { name: 'Loungewear' }, select: { id: true } })
+                        break
+                    case 'scarves':
+                        categories = await prisma.category.findMany({ where: { name: 'Scarf' }, select: { id: true } })
+                        break
+                    case 'slides':
+                        categories = await prisma.category.findMany({ where: { name: 'Slides' }, select: { id: true } })
+                        break
+                    case 'sweat shirts':
+                        categories = await prisma.category.findMany({ where: { name: 'T-Shirt' }, select: { id: true } })
+                        break
+                    case 't shirts':
+                        categories = await prisma.category.findMany({ where: { name: 'T-Shirt' }, select: { id: true } })
+                        break
+                    default:
+                        categories = []
+                        break
+                }
+
+                // const productImages = [
+                //     {
+                //         url: row['productImages:url'] || `https://shopafricana.co/wp-content/uploads/2024/01/${generateRandomStringWithoutSymbols(12).toLowerCase()}.jpg`,
+                //         isDefault: true
+                //     },
+                // ]
+                const productImages = row.url.split(",").map((url: string, index: number) => ({
+                    url: url,
+                    isDefault: index === 0 ? true : false
+                }))
+
+                products.push({ name, slug, description, productVariants, productImages, categories })
             }).on('end', () => {
                 resolve(products)
             })
@@ -211,7 +263,7 @@ function readCSV(filePath: string) {
 }
 
 async function seedProductsFromJsonFile() {
-    const productsData = await readCSV(`${__dirname}/products.csv`) as ProductFromFile[]
+    const productsData = await readCSV(`${__dirname}/products-2.csv`) as ProductFromFile[]
 
     const currency = await prisma.currency.findFirst()
 
@@ -220,15 +272,15 @@ async function seedProductsFromJsonFile() {
     }
 
     for (const productData of productsData) {
-        const { name, slug, description, productVariants, productImages } = productData
+        const { name, slug, description, productVariants, productImages, categories } = productData
 
         const product = await prisma.product.create({
             data: {
                 name,
-                slug,
+                slug: `${slug}-${generateRandomStringWithoutSymbols(6)}`,
                 description,
                 currencyId: currency.id,
-                lowOnStockMargin: 2,
+                lowOnStockMargin: 0,
                 productVariants: {
                     create: productVariants,
                 },
@@ -238,29 +290,38 @@ async function seedProductsFromJsonFile() {
             }
         })
 
-        const categoryResult: number[] = await prisma.$queryRaw`SELECT id FROM Category ORDER BY RAND() LIMIT 3;`
-        const categoryIds = categoryResult.map((row: any) => row.id).sort((a, b) => a - b)
+        // const categoryResult: number[] = await prisma.$queryRaw`SELECT id FROM Category ORDER BY RAND() LIMIT 3;`
+        // const categoryIds = categoryResult.map((row: any) => row.id).sort((a, b) => a - b)
 
-        const tagResult: number[] = await prisma.$queryRaw`SELECT id FROM Tag ORDER BY RAND() LIMIT 5;`
-        const tagIds = tagResult.map((row: any) => row.id).sort((a, b) => a - b)
+        // const tagResult: number[] = await prisma.$queryRaw`SELECT id FROM Tag ORDER BY RAND() LIMIT 5;`
+        // const tagIds = tagResult.map((row: any) => row.id).sort((a, b) => a - b)
 
-        const productCategoriesAndTags = await prisma.product.update({
+        // const productCategoriesAndTags = await prisma.product.update({
+        //     where: { id: product.id },
+        //     data: {
+        //         categories: {
+        //             connect: [
+        //                 ...categoryIds.map(category => ({
+        //                     id: category,
+        //                 }))
+        //             ],
+        //         },
+        //         tags: {
+        //             connect: [
+        //                 ...tagIds.map(tag => ({
+        //                     id: tag,
+        //                 }))
+        //             ],
+        //         }
+        //     }
+        // })
+
+        await prisma.product.update({
             where: { id: product.id },
             data: {
                 categories: {
-                    connect: [
-                        ...categoryIds.map(category => ({
-                            id: category,
-                        }))
-                    ],
+                    connect: categories,
                 },
-                tags: {
-                    connect: [
-                        ...tagIds.map(tag => ({
-                            id: tag,
-                        }))
-                    ],
-                }
             }
         })
 
@@ -276,7 +337,7 @@ async function seedProductsFromJsonFile() {
         })
     }
 
-    console.log('Test products seeded successfully')
+    console.log('Products seeded successfully')
 }
 
 const getProductTotalQuantity = async (productId: string) => {
@@ -315,6 +376,7 @@ const categoriesData = [
                     { name: 'Dashiki' },
                     { name: 'T-Shirt' },
                     { name: 'Dress Shirt' },
+                    { name: 'Loungewear' },
                     { name: 'Underwear' },
                 ],
             },
@@ -330,10 +392,12 @@ const categoriesData = [
             {
                 name: 'Accessories',
                 children: [
+                    { name: 'Caps' },
                     { name: 'Scarf' },
                     { name: 'Wallets' },
                     { name: 'Bags' },
                     { name: 'Purses' },
+                    { name: 'Pens' },
                 ],
             },
         ],
@@ -362,10 +426,12 @@ const categoriesData = [
             {
                 name: 'Accessories',
                 children: [
+                    { name: 'Caps' },
                     { name: 'Scarf' },
                     { name: 'Wallets' },
                     { name: 'Bags' },
                     { name: 'Purses' },
+                    { name: 'Pens' },
                 ],
             },
         ],
@@ -381,6 +447,8 @@ const categoriesData = [
 ]
 
 async function main() {
+    await prisma.admin.deleteMany({})
+    await seedAdmin()
     await prisma.currency.deleteMany({})
     await seedCurrencies(currenciesData)
     await prisma.category.deleteMany({})
@@ -394,7 +462,6 @@ async function main() {
     await prisma.product.deleteMany({})
     // await seedProducts(20)
     await seedProductsFromJsonFile()
-    await seedAdmin()
 }
 
 main()
