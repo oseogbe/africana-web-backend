@@ -1,9 +1,9 @@
 import { Request, Response } from 'express'
-import { Prisma } from '@prisma/client'
+import { ProductImage, ProductVariant } from '@prisma/client'
 import { prisma } from '@/prisma-client'
-import { logger } from '@/lib/logger'
-import { generateRandomStringWithoutSymbols, slugifyStr } from '@/lib/helpers'
 import dayjs from 'dayjs'
+import { generateRandomStringWithoutSymbols, slugifyStr } from '@/lib/helpers'
+import { logger } from '@/lib/logger'
 
 const getProducts = async (req: Request, res: Response) => {
     try {
@@ -128,8 +128,8 @@ const createProduct = async (req: Request, res: Response) => {
     try {
         const categories: number[] = req.body.categories
         const tags: number[] = req.body.tags
-        const productVariants: Prisma.ProductVariantCreateInput[] = req.body.productVariants
-        const productImages: Prisma.ProductImageCreateInput[] = req.body.productImages
+        const productVariants: ProductVariant[] = req.body.productVariants
+        const productImages: ProductImage[] = req.body.productImages
 
         const product = await prisma.product.create({
             data: {
@@ -262,8 +262,8 @@ const updateProduct = async (req: Request, res: Response) => {
     try {
         const categories: number[] = req.body.categories
         const tags: number[] = req.body.tags
-        const productVariants: Prisma.ProductVariantCreateInput[] = req.body.productVariants
-        const productImages: Prisma.ProductImageCreateInput[] = req.body.productImages
+        const productVariants: ProductVariant[] = req.body.productVariants
+        const productImages: ProductImage[] = req.body.productImages
 
         const slug = req.params.slug
 
@@ -311,11 +311,12 @@ const updateProduct = async (req: Request, res: Response) => {
                     }))
                 },
                 productImages: {
-                    upsert: productImages.map(image => ({
-                        where: { url: image.url },
-                        update: { ...image },
-                        create: { ...image }
-                    }))
+                    // upsert: productImages.map(image => ({
+                    //     where: { url: image.url },
+                    //     update: { ...image },
+                    //     create: { ...image }
+                    // }))
+                    create: productImages
                 },
                 categories: {
                     set: categories.map(category => ({ id: category }))
