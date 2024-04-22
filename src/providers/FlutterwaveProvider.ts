@@ -30,12 +30,14 @@ class FlutterwavePaymentProvider implements PaymentProvider {
             tx_ref,
             amount,
             currency: 'NGN',
-            redirect_url: `${process.env.FRONTEND_URL}/flutterwave/payment-callback`,
+            redirect_url: `${process.env.FRONTEND_URL}/order/complete`,
             payment_options: 'card',
             customer: {
                 email,
             },
-            meta: {},
+            meta: {
+                provider: "flutterwave"
+            },
             customizations: {
                 title: 'Africana Couture',
                 description: 'Payment of order items from Africana e-commerce',

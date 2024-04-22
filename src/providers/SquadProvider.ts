@@ -18,7 +18,7 @@ class SquadPaymentProvider implements PaymentProvider {
             amount: amount * 100,
             currency: 'USD',
             transaction_ref: tx_ref,
-            callback_url: `${process.env.FRONTEND_URL}/squad/payment-callback`,
+            callback_url: `${process.env.FRONTEND_URL}/order/complete`,
             payment_channels: ['card'],
             initiate_type: 'inline',
             metadata: {

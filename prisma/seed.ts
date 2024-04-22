@@ -356,10 +356,17 @@ const getProductTotalQuantity = async (productId: string) => {
 
 const currenciesData = [
     {
-        code: 'NGN',
-        name: 'Naira',
+        code: 'USD',
+        name: 'US Dollar',
         exchangeRate: 1,
         isDefault: true,
+        isActive: true,
+    },
+    {
+        code: 'NGN',
+        name: 'Naira',
+        exchangeRate: 1075.75,
+        isDefault: false,
         isActive: true,
     }
 ]
