@@ -41,7 +41,7 @@ router.post(
             }),
         body('orderItems.*.quantity').isNumeric(),
         body('taxId').isNumeric(),
-        body('paymentMethod').isIn(['flutterwave', 'paystack']).withMessage('Invalid payment method')
+        body('paymentMethod').isIn(['flutterwave', 'squad']).withMessage('Invalid payment method')
     ],
     validateInput,
     checkout

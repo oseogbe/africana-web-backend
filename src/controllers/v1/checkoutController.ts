@@ -1,7 +1,10 @@
 import { Request, Response } from "express"
 import axios from "axios"
-import { Customer, Order } from "@prisma/client"
+import { Customer } from "@prisma/client"
 import { prisma } from "@/prisma-client"
+import PaymentService from "@/services/PaymentService"
+import FlutterwavePaymentProvider from "@/providers/FlutterwaveProvider"
+import SquadPaymentProvider from "@/providers/SquadProvider"
 import { generateRandomStringWithoutSymbols } from "@/lib/helpers"
 import { logger } from "@/lib/logger"
 
@@ -9,8 +12,6 @@ export type CheckoutItem = {
     productVariantId: string;
     quantity: number;
 }
-
-type CustomerDetails = Pick<Customer, "firstName" | "lastName" | "email" | "phone">
 
 export const checkout = async (req: Request, res: Response) => {
     try {
@@ -63,22 +64,24 @@ export const checkout = async (req: Request, res: Response) => {
             }
         })
 
-        let result = null
-
         switch (paymentMethod) {
             case "flutterwave":
-                result = await initializeRavePayment(
-                    customer,
-                    order,
-                    total,
-                )
+                const ravePaymentProvider = new FlutterwavePaymentProvider()
+                const rave = new PaymentService(ravePaymentProvider)
+                const flwResult = await rave.initiatePayment(customer.email, order.id, total)
+                res.json(flwResult.data)
+                break
+
+            case "squad":
+                const squadPaymentProvider = new SquadPaymentProvider()
+                const squad = new PaymentService(squadPaymentProvider)
+                const squadResult = await squad.initiatePayment(customer.email, order.id, total)
+                res.json(squadResult.data)
                 break
 
             default:
                 break
         }
-
-        return res.json(result)
 
     } catch (error) {
         logger.error(error)
@@ -130,56 +133,4 @@ const calculateTotal = async (subTotal: number, taxId: number) => {
     }
 
     return subTotal + parseFloat(taxAmount.value as unknown as string)
-}
-
-const initializeRavePayment = async (customer: CustomerDetails, order: Order, amount: number): Promise<any> => {
-    const headers = {
-        Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
-        'Content-Type': 'application/json',
-    }
-
-    const tx_ref = generateRandomStringWithoutSymbols(12)
-
-    const requestBody = {
-        tx_ref,
-        amount,
-        currency: 'NGN',
-        redirect_url: `${process.env.FRONTEND_URL}/flutterwave/payment-callback`,
-        payment_options: 'card',
-        customer: {
-            name: `${customer.firstName} ${customer.lastName}`,
-            email: customer.email,
-            phone: customer?.phone,
-        },
-        meta: {},
-        customizations: {
-            title: 'Africana Couture',
-            description: 'Payment of order items from Africana e-commerce',
-            logo: `${process.env.APP_URL}/img/africana-logo.png`
-        },
-    }
-
-    const currency = await prisma.currency.findUnique({
-        where: {
-            code: 'NGN'
-        }
-    })
-
-    if (!currency) {
-        throw new Error('Currency not found')
-    }
-
-    await prisma.payment.create({
-        data: {
-            orderId: order.id,
-            channel: "Flutterwave",
-            reference: tx_ref,
-            amount,
-            currencyId: currency.id,
-            meta: {},
-        }
-    })
-
-    const response = await axios.post('https://api.flutterwave.com/v3/payments', requestBody, { headers })
-    return response.data
 }
