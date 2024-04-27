@@ -108,8 +108,8 @@ model ProductVariant {
   sku       String      @unique
   size      String
   color     String?
-  price     Int
-  oldPrice  Int?
+  price     Float
+  oldPrice  Float?
   quantity  Int
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -174,7 +174,7 @@ model CartItem {
   cartId           String
   productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
   productVariantId String
-  pricePerItem     Int
+  pricePerItem     Float
   quantity         Int
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
@@ -203,7 +203,7 @@ model Order {
   subTotal   Int
   tax        Tax?        @relation(fields: [taxId], references: [id], onDelete: Cascade)
   taxId      Int?
-  total      Int
+  total      Float
   address1   String?
   address2   String?
   postalCode String?
@@ -224,7 +224,7 @@ model OrderItem {
   orderId          String
   productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
   productVariantId String
-  pricePerItem     Int
+  pricePerItem     Float
   quantity         Int
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt

@@ -92,11 +92,13 @@ async function seedProducts(length: number) {
     Array.from({ length }, async () => {
         const productName = faker.commerce.productName()
 
+        const price = parseFloat(faker.commerce.price({ min: 20, max: 50 }))
+
         const productVariants = Array.from({ length: 3 }, () => ({
             sku: faker.string.alphanumeric({ length: { min: 8, max: 12 } }),
             size: randomSelect(['S', 'M', 'L', 'XL', 'XXL', 'XXXL']),
-            price: parseInt(faker.commerce.price({ min: 400, max: 500 })),
-            oldPrice: parseInt(faker.commerce.price({ min: 500, max: 600 })),
+            price,
+            oldPrice: price + 5,
             quantity: faker.number.int({ min: 1, max: 2 })
         }))
 
@@ -197,7 +199,7 @@ async function readCSV(filePath: string) {
                         // color: row['productVariants:color'],
                         color: randomSelect(['White', 'Grey', 'Black']),
                         // price: parseInt(price.slice(1), 10),
-                        price: 100000,
+                        price: 10,
                         oldPrice: null,
                         quantity: 1,
                     }
@@ -253,7 +255,8 @@ async function readCSV(filePath: string) {
                 }))
 
                 products.push({ name, slug, description, productVariants, productImages, categories })
-            }).on('end', () => {
+            })
+            .on('end', () => {
                 resolve(products)
             })
             .on('error', (error) => {

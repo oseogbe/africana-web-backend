@@ -177,7 +177,7 @@ const createProduct = async (req: Request, res: Response) => {
                     create: [
                         ...productVariants.map(variant => ({
                             ...variant,
-                            price: parseInt(variant.price as unknown as string, 10),
+                            price: parseFloat(variant.price as unknown as string),
                             quantity: parseInt(variant.quantity as unknown as string, 10),
                         }))
                     ],

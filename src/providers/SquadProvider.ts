@@ -65,7 +65,7 @@ class SquadPaymentProvider implements PaymentProvider {
 
         if (result.data.success) {
 
-            let squadAmount = parseInt(payment.amount as unknown as string, 10) * 100
+            let squadAmount = parseFloat(payment.amount as unknown as string) * 100
 
             console.log("equals", result.data.transaction_amount, squadAmount)
 
