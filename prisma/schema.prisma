@@ -71,7 +71,7 @@ model Currency {
   id           Int       @id @default(autoincrement())
   code         String    @unique
   name         String
-  exchangeRate Decimal   @db.Decimal(6, 4)
+  exchangeRate Decimal   @db.Decimal(6, 2)
   isDefault    Boolean   @default(false)
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
