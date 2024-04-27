@@ -1,7 +1,11 @@
+import path from 'path'
+import fs from 'fs'
+
 import { Request, Response } from 'express'
-import { ProductImage, ProductVariant } from '@prisma/client'
-import { prisma } from '@/prisma-client'
 import dayjs from 'dayjs'
+import { ProductImage, ProductVariant } from '@prisma/client'
+
+import { prisma } from '@/prisma-client'
 import { generateRandomStringWithoutSymbols, slugifyStr } from '@/lib/helpers'
 import { logger } from '@/lib/logger'
 
@@ -127,30 +131,63 @@ const getProducts = async (req: Request, res: Response) => {
 const createProduct = async (req: Request, res: Response) => {
     try {
         const categories: number[] = req.body.categories
-        const tags: number[] = req.body.tags
+        // const tags: number[] = req.body.tags
         const productVariants: ProductVariant[] = req.body.productVariants
-        const productImages: ProductImage[] = req.body.productImages
+
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ success: false, message: 'No files uploaded' });
+        }
+
+        const imagePaths = []
+
+        const uploadsDir = path.join(__dirname, '../../..', 'public', 'uploads')
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true })
+        }
+
+        for (const file of req.files as Express.Multer.File[]) {
+            const fileName = file.filename + path.extname(file.originalname)
+            const oldPath = file.path
+            const newPath = path.join(uploadsDir, fileName)
+            fs.renameSync(oldPath, newPath)
+            imagePaths.push(`/uploads/${fileName}`)
+        }
+
+        const currency = await prisma.currency.findFirst({
+            where: {
+                isDefault: true
+            }
+        })
+
+        if (!currency) {
+            return res.json({
+                success: false,
+                message: "Select a default currency."
+            })
+        }
 
         const product = await prisma.product.create({
             data: {
                 name: req.body.name,
                 slug: `${slugifyStr(req.body.name)}-${generateRandomStringWithoutSymbols(6)}`,
                 description: req.body.description,
-                currencyId: req.body.currency ?? 1,
-                lowOnStockMargin: req.body.lowOnStockMargin,
+                currencyId: currency.id,
+                lowOnStockMargin: parseInt(req.body.lowOnStockMargin as string, 10),
                 productVariants: {
-                    // create: [
-                    //     ...productVariants.map(variant => ({
-                    //         ...variant,
-                    //         price: setAmount(variant.price),
-                    //         oldPrice: variant.oldPrice ? setAmount(variant.oldPrice) : null,
-                    //     }))
-                    // ],
-                    create: productVariants
+                    create: [
+                        ...productVariants.map(variant => ({
+                            ...variant,
+                            price: parseInt(variant.price as unknown as string, 10),
+                            quantity: parseInt(variant.quantity as unknown as string, 10),
+                        }))
+                    ],
                 },
                 productImages: {
                     create: [
-                        ...productImages
+                        ...imagePaths.map((image, i) => ({
+                            url: image,
+                            isDefault: i === 0
+                        }))
                     ],
                 },
             }
@@ -162,17 +199,17 @@ const createProduct = async (req: Request, res: Response) => {
                 categories: {
                     connect: [
                         ...categories.map(category => ({
-                            id: category,
+                            id: parseInt(category as unknown as string, 10),
                         }))
                     ],
                 },
-                tags: {
-                    connect: [
-                        ...tags.map(tag => ({
-                            id: tag,
-                        }))
-                    ],
-                }
+                // tags: {
+                //     connect: [
+                //         ...tags.map(tag => ({
+                //             id: tag,
+                //         }))
+                //     ],
+                // }
             }
         })
 
@@ -190,7 +227,7 @@ const createProduct = async (req: Request, res: Response) => {
         return res.json({
             success: true,
             message: "New product added",
-            product: { ...product, ...productCategoriesAndTags }
+            // product: { ...product, ...productCategoriesAndTags }
         })
     } catch (error) {
         logger.error(error)

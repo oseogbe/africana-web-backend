@@ -1,5 +1,6 @@
 import express from 'express'
 import { body, query } from 'express-validator'
+import multer from 'multer'
 import { prisma } from '@/prisma-client'
 import {
     getProducts,
@@ -40,8 +41,29 @@ router.get(
     getProducts
 )
 
+const upload = multer({
+    dest: 'public/',
+    limits: {
+        files: 10,
+        fileSize: 2097152,
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'image/png' || 
+            file.mimetype === 'image/jpeg' || 
+            file.mimetype === 'image/jpg') {
+            cb(null, true)
+        } else {
+            cb(null, false)
+            const err = new Error('Only .jpg, .jpeg and .png images are supported!')
+            err.name = 'ExtensionError'
+            return cb(err)
+        }
+    }
+})
+
 router.post(
     '/create',
+    upload.array('productImages'),
     [
         body('name').isString().trim().notEmpty().withMessage('Name required')
             .custom(async (value) => {
@@ -54,10 +76,9 @@ router.post(
                 return true
             }),
         body('description').isString().trim().notEmpty().withMessage('Description required'),
-        body('currencyId').isNumeric().withMessage('Currency required'),
         body('lowOnStockMargin').isNumeric().withMessage('Low on stock margin required'),
         body('categories.*').isNumeric(),
-        body('tags.*').isNumeric(),
+        // body('tags.*').isNumeric(),
         body('productVariants').isArray({ min: 1 }).withMessage('Product variants required'),
         body('productVariants.*.sku').isString().trim().notEmpty().withMessage('SKU required')
             .custom(async (value) => {
@@ -80,9 +101,6 @@ router.post(
         body('productVariants.*.price').isNumeric().withMessage('Invalid price value'),
         body('productVariants.*.oldPrice').optional().isNumeric().withMessage('Invalid old price value'),
         body('productVariants.*.quantity').isNumeric().withMessage('Quantity required'),
-        body('productImages').isArray({ min: 1 }).withMessage('Product images required'),
-        body('productImages.*.url').isString().trim().notEmpty().withMessage('Product image url required'),
-        body('productImages.*.isDefault').isBoolean(),
         validateInput,
     ],
     createProduct
@@ -100,7 +118,7 @@ router.put(
         body('currencyId').isNumeric().withMessage('Currency required'),
         body('lowOnStockMargin').isNumeric().withMessage('Low on stock margin required'),
         body('categories.*').isNumeric(),
-        body('tags.*').isNumeric(),
+        // body('tags.*').isNumeric(),
         body('productVariants').isArray({ min: 1 }).withMessage('Product variants required'),
         body('productVariants.*.sku').isString().trim().notEmpty().withMessage('SKU required'),
         body('productVariants.*.size')
