@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextIndex"]
 }
 
 datasource db {
@@ -25,11 +23,11 @@ model Customer {
   city            String?
   state           String?
   country         String?
-  refreshToken    String?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
-  order           Order[]
+  refreshToken    String?
   cart            Cart[]
+  order           Order[]
   payment         Payment[]
   wishlist        Wishlist[]
 }
@@ -48,14 +46,16 @@ model Admin {
 
 model Category {
   id        Int        @id @default(autoincrement())
-  parentId  Int?
-  parent    Category?  @relation("ChildCategory", fields: [parentId], references: [id], onDelete: Cascade)
-  children  Category[] @relation("ChildCategory")
   name      String
   slug      String     @unique
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-  products  Product[]
+  parentId  Int?
+  parent    Category?  @relation("ChildCategory", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Category[] @relation("ChildCategory")
+  products  Product[]  @relation("CategoryToProduct")
+
+  @@index([parentId], map: "Category_parentId_fkey")
 }
 
 model Tag {
@@ -64,46 +64,48 @@ model Tag {
   slug      String    @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  products  Product[]
+  products  Product[] @relation("ProductToTag")
 }
 
 model Currency {
   id           Int       @id @default(autoincrement())
   code         String    @unique
   name         String
-  exchangeRate Decimal   @db.Decimal(6, 2)
   isDefault    Boolean   @default(false)
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  product      Product[]
+  exchangeRate Decimal   @db.Decimal(6, 2)
   payment      Payment[]
+  product      Product[]
 }
 
 model Product {
   id               String           @id @default(uuid())
   name             String
-  slug             String           @unique
   description      String           @db.Text
-  categories       Category[]
-  tags             Tag[]
-  rating           Decimal?
   lowOnStockMargin Int
-  currency         Currency         @relation(fields: [currencyId], references: [id], onDelete: Cascade)
   currencyId       Int
-  isFeatured       Boolean          @default(false)
-  totalQuantity    Int              @default(0)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
-  productVariants  ProductVariant[]
+  rating           Decimal?
+  slug             String           @unique
+  isFeatured       Boolean          @default(false)
+  totalQuantity    Int              @default(0)
+  currency         Currency         @relation(fields: [currencyId], references: [id], onDelete: Cascade)
   productImages    ProductImage[]
   productReviews   ProductReview[]
+  productVariants  ProductVariant[]
   ProductView      ProductView[]
+  categories       Category[]       @relation("CategoryToProduct")
+  tags             Tag[]            @relation("ProductToTag")
+
+  @@index([currencyId], map: "Product_currencyId_fkey")
+  @@fulltext([name])
 }
 
 model ProductVariant {
   id        String      @id @default(uuid())
-  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   sku       String      @unique
   size      String
@@ -113,8 +115,9 @@ model ProductVariant {
   quantity  Int
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
-  orderItem OrderItem[]
   cartItem  CartItem[]
+  orderItem OrderItem[]
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   wishlist  Wishlist[]
 
   @@unique([productId, size, color])
@@ -122,64 +125,75 @@ model ProductVariant {
 
 model ProductImage {
   id        String   @id @default(uuid())
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   url       String
   isDefault Boolean
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId], map: "ProductImage_productId_fkey")
 }
 
 model ProductReview {
   id        String   @id @default(uuid())
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   comment   String?  @db.Text
   stars     Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId], map: "ProductReview_productId_fkey")
 }
 
 model ProductView {
   id        Int       @id @default(autoincrement())
-  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   visitors  Visitor[]
+
+  @@index([productId], map: "ProductView_productId_fkey")
 }
 
 model Visitor {
   id            Int         @id @default(autoincrement())
-  productView   ProductView @relation(fields: [productViewId], references: [id], onDelete: Cascade)
   productViewId Int
   visitor       String
+  productView   ProductView @relation(fields: [productViewId], references: [id], onDelete: Cascade)
+
+  @@index([productViewId], map: "Visitor_productViewId_fkey")
 }
 
 model Cart {
   id         String     @id @default(uuid())
   user       String?    @unique
-  customer   Customer?  @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId String?
   expiresAt  DateTime
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
+  customer   Customer?  @relation(fields: [customerId], references: [id], onDelete: Cascade)
   cartItem   CartItem[]
   order      Order?
+
+  @@index([customerId], map: "Cart_customerId_fkey")
 }
 
 model CartItem {
   id               String         @id @default(uuid())
-  cart             Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
   cartId           String
-  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
   productVariantId String
   pricePerItem     Float
   quantity         Int
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
+  cart             Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
   @@unique([cartId, productVariantId])
+  @@index([productVariantId], map: "CartItem_productVariantId_fkey")
 }
 
 model Tax {
@@ -195,14 +209,9 @@ model Tax {
 
 model Order {
   id         String      @id @default(uuid())
-  code       String      @unique
-  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId String
-  cart       Cart?       @relation(fields: [cartId], references: [id], onDelete: Cascade)
   cartId     String?     @unique
   subTotal   Int
-  tax        Tax?        @relation(fields: [taxId], references: [id], onDelete: Cascade)
-  taxId      Int?
   total      Float
   address1   String?
   address2   String?
@@ -211,58 +220,70 @@ model Order {
   state      String?
   country    String?
   notes      String?     @db.Text
-  status     OrderStatus @default(Pending)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+  status     OrderStatus @default(Pending)
+  code       String      @unique
+  taxId      Int?
+  cart       Cart?       @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tax        Tax?        @relation(fields: [taxId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
   payment    Payment[]
+
+  @@index([customerId], map: "Order_customerId_fkey")
+  @@index([taxId], map: "Order_taxId_fkey")
 }
 
 model OrderItem {
   id               String         @id @default(uuid())
-  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId          String
-  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
   productVariantId String
   pricePerItem     Float
   quantity         Int
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  @@index([orderId], map: "OrderItem_orderId_fkey")
+  @@index([productVariantId], map: "OrderItem_productVariantId_fkey")
 }
 
 model Payment {
   id          String        @id @default(uuid())
-  customer    Customer?     @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId  String?
-  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId     String
   channel     String
   reference   String        @unique
-  currency    Currency      @relation(fields: [currencyId], references: [id], onDelete: Cascade)
-  currencyId  Int
-  amount      Decimal       @db.Decimal(12, 1)
+  amount      Decimal       @db.Decimal(12, 2)
   meta        Json?
   status      PaymentStatus @default(Pending)
   completedAt DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  currencyId  Int
+  currency    Currency      @relation(fields: [currencyId], references: [id], onDelete: Cascade)
+  customer    Customer?     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([currencyId], map: "Payment_currencyId_fkey")
+  @@index([customerId], map: "Payment_customerId_fkey")
+  @@index([orderId], map: "Payment_orderId_fkey")
 }
 
 model Wishlist {
   id               String         @id @default(uuid())
-  customer         Customer?      @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId       String?
-  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
   productVariantId String
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-}
+  customer         Customer?      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
-// enum Role {
-//   Customer
-//   Admin
-//   SuperAdmin
-// }
+  @@index([customerId], map: "Wishlist_customerId_fkey")
+  @@index([productVariantId], map: "Wishlist_productVariantId_fkey")
+}
 
 enum TaxType {
   Percentage
