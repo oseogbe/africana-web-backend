@@ -1,6 +1,8 @@
 import express, { Express, Request, Response, NextFunction } from 'express'
+import * as https from 'https'
+import * as fs from 'fs'
 import cors from 'cors'
-import path from 'path'
+import * as path from 'path'
 import cookieParser from 'cookie-parser'
 import * as useragent from 'express-useragent'
 import 'dotenv/config'
@@ -10,7 +12,15 @@ import { CustomError } from 'typings'
 require('dotenv').config()
 
 const app: Express = express()
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 443
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.protocol === 'http') {
+        res.redirect(301, `https://${req.headers.host}${req.originalUrl}`)
+    } else {
+        next()
+    }
+})
 
 const corsOptions: cors.CorsOptions = {
     origin: '*',
@@ -50,4 +60,12 @@ app.all('*', (req, res) => {
     })
 })
 
-app.listen(3000, () => console.log(`Server running on port ${PORT}...`))
+const privateKeyPath = '../storage/cert/private.key'
+const certificatePath = '../storage/cert/7e06156776a249d.crt'
+
+const server = https.createServer({
+    key: fs.readFileSync(path.resolve(__dirname, privateKeyPath), 'utf-8'),
+    cert: fs.readFileSync(path.resolve(__dirname, certificatePath), 'utf-8')
+}, app)
+
+server.listen(PORT, () => console.log(`Server running on port ${PORT}...`))
