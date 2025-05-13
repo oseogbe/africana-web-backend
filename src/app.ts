@@ -60,8 +60,10 @@ app.all('*', (req, res) => {
     })
 })
 
-const privateKeyPath = '../storage/cert/private.key'
-const certificatePath = '../storage/cert/7e06156776a249d.crt'
+const privateKeyPath = '../../storage/ssl/key.pem'
+const certificatePath = '../../storage/ssl/certificate.crt'
+
+console.log(path.resolve(__dirname, privateKeyPath))
 
 const server = https.createServer({
     key: fs.readFileSync(path.resolve(__dirname, privateKeyPath), 'utf-8'),
